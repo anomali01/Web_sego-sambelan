@@ -70,18 +70,55 @@ document.addEventListener('DOMContentLoaded', function() {
     const lat = parseFloat(document.getElementById('latitude').value) || -7.2575;
     const lng = parseFloat(document.getElementById('longitude').value) || 112.7521;
     const map = L.map('map').setView([lat, lng], 13);
+    
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap'
     }).addTo(map);
+    
     let marker = L.marker([lat, lng], {draggable: true}).addTo(map);
+
+    function updateLocation(lat, lng) {
+        document.getElementById('latitude').value = lat.toFixed(8);
+        document.getElementById('longitude').value = lng.toFixed(8);
+        
+        // Reverse Geocoding menggunakan Nominatim OpenStreetMap
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.address) {
+                    const addr = data.address;
+                    
+                    // Tentukan Alamat Jalan
+                    const street = addr.road || addr.pedestrian || addr.suburb || addr.neighbourhood || '';
+                    if (street && !document.getElementById('street_address').value) {
+                        document.getElementById('street_address').value = street;
+                    } else if (street) {
+                        document.getElementById('street_address').value = street; // Memaksa update
+                    }
+                    
+                    // Tentukan Kota/Kabupaten
+                    const city = addr.city || addr.town || addr.village || addr.county || '';
+                    if (city) document.getElementById('city').value = city;
+                    
+                    // Tentukan Provinsi
+                    const state = addr.state || addr.region || '';
+                    if (state) document.getElementById('province').value = state;
+                    
+                    // Tentukan Kode Pos
+                    const postcode = addr.postcode || '';
+                    if (postcode) document.getElementById('postal_code').value = postcode;
+                }
+            })
+            .catch(error => console.error('Error fetching address:', error));
+    }
+
     marker.on('dragend', function(e) {
-        document.getElementById('latitude').value = e.target.getLatLng().lat.toFixed(8);
-        document.getElementById('longitude').value = e.target.getLatLng().lng.toFixed(8);
+        updateLocation(e.target.getLatLng().lat, e.target.getLatLng().lng);
     });
+    
     map.on('click', function(e) {
         marker.setLatLng(e.latlng);
-        document.getElementById('latitude').value = e.latlng.lat.toFixed(8);
-        document.getElementById('longitude').value = e.latlng.lng.toFixed(8);
+        updateLocation(e.latlng.lat, e.latlng.lng);
     });
 });
 </script>

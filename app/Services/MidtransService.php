@@ -13,6 +13,14 @@ class MidtransService
         \Midtrans\Config::$isProduction = config('midtrans.is_production');
         \Midtrans\Config::$isSanitized = config('midtrans.is_sanitized');
         \Midtrans\Config::$is3ds = config('midtrans.is_3ds');
+        
+        // Mematikan verifikasi SSL khusus untuk testing lokal di Windows (agar tidak error cURL 60)
+        if (!config('midtrans.is_production')) {
+            \Midtrans\Config::$curlOptions = [
+                CURLOPT_SSL_VERIFYPEER => false,
+                CURLOPT_SSL_VERIFYHOST => false,
+            ];
+        }
     }
 
     /**
