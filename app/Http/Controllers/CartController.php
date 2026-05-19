@@ -23,6 +23,20 @@ class CartController extends Controller
      */
     public function add(Request $request)
     {
+        // Jika belum login, arahkan ke halaman login
+        if (!auth()->check()) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'require_login' => true,
+                    'message' => 'Silakan login terlebih dahulu untuk menambahkan ke keranjang.',
+                    'redirect' => route('login'),
+                ], 401);
+            }
+            return redirect()->route('login')
+                ->with('info', 'Silakan login terlebih dahulu untuk memesan.');
+        }
+
         $request->validate([
             'product_id' => ['required', 'exists:products,id'],
             'quantity' => ['nullable', 'integer', 'min:1'],

@@ -2,6 +2,24 @@
 @section('title', 'Menu - Sego Sambelan')
 
 @section('content')
+
+{{-- Modal Login Prompt (muncul ketika guest klik Pesan) --}}
+@guest
+<div id="login-prompt-overlay" onclick="if(event.target===this)this.style.display='none'">
+    <div class="modal-card glass-card">
+        <span class="modal-icon">🔒</span>
+        <h2>Login untuk Memesan</h2>
+        <p>Silakan masuk atau buat akun untuk menambahkan menu ke keranjang dan melanjutkan pembelian.</p>
+        <a href="/login" class="btn btn-primary btn-full">Masuk Sekarang</a>
+        <a href="/register" class="btn btn-outline btn-full" style="margin-top:0.5rem">Buat Akun Baru</a>
+        <button class="btn btn-sm" style="margin-top:0.8rem;color:var(--text-secondary);background:none;"
+                onclick="document.getElementById('login-prompt-overlay').style.display='none'">
+            Batal
+        </button>
+    </div>
+</div>
+@endguest
+
 <div class="container py-2">
     <div class="menu-hero">
         <h1>Menu Sego Sambelan 🔥</h1>
@@ -38,9 +56,10 @@
                     <span class="product-price">{{ $product->formatted_price }}</span>
                     @if($product->isInStock())
                     <button class="btn btn-primary btn-sm btn-add-cart"
-                            onclick="addToCart({{ $product->id }})"
-                            data-product-id="{{ $product->id }}">
-                        + Keranjang
+                            onclick="addToCart({{ $product->id }}, this)"
+                            data-product-id="{{ $product->id }}"
+                            data-requires-auth="{{ auth()->check() ? 'false' : 'true' }}">
+                        🛒 Pesan
                     </button>
                     @else
                     <span class="badge badge-danger">Habis</span>
@@ -59,10 +78,18 @@
 
 @push('scripts')
 <script>
-function addToCart(productId) {
-    const btn = document.querySelector(`[data-product-id="${productId}"]`);
-    const originalText = btn.textContent;
-    btn.textContent = '✓ Ditambahkan';
+function addToCart(productId, btn) {
+    if (!btn) btn = document.querySelector(`[data-product-id="${productId}"]`);
+    const requiresAuth = btn.dataset.requiresAuth === 'true';
+
+    // Jika guest, langsung arahkan ke halaman login
+    if (requiresAuth) {
+        showLoginPrompt();
+        return;
+    }
+
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '✓ Ditambahkan';
     btn.disabled = true;
     btn.classList.add('btn-success');
 
@@ -75,22 +102,40 @@ function addToCart(productId) {
         },
         body: JSON.stringify({ product_id: productId, quantity: 1 })
     })
-    .then(r => r.json())
+    .then(r => {
+        if (r.status === 401) return r.json().then(d => { throw { requireLogin: true, redirect: d.redirect }; });
+        return r.json();
+    })
     .then(data => {
         if (data.success) {
             updateCartBadge(data.cart_count);
+            showToast(data.message || 'Ditambahkan ke keranjang!');
         }
         setTimeout(() => {
-            btn.textContent = originalText;
+            btn.innerHTML = originalText;
             btn.disabled = false;
             btn.classList.remove('btn-success');
         }, 1200);
     })
-    .catch(() => {
-        btn.textContent = originalText;
-        btn.disabled = false;
-        btn.classList.remove('btn-success');
+    .catch(err => {
+        if (err.requireLogin) {
+            showLoginPrompt();
+        } else {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            btn.classList.remove('btn-success');
+        }
     });
+}
+
+function showLoginPrompt() {
+    // Tampilkan modal atau redirect ke login
+    const overlay = document.getElementById('login-prompt-overlay');
+    if (overlay) {
+        overlay.style.display = 'flex';
+    } else {
+        window.location.href = '/login?redirect=/menu';
+    }
 }
 
 function updateCartBadge(count) {
@@ -110,6 +155,15 @@ function updateCartBadge(count) {
         badge.classList.add('badge-pop');
         setTimeout(() => badge.classList.remove('badge-pop'), 300);
     }
+}
+
+function showToast(message) {
+    const toast = document.createElement('div');
+    toast.className = 'toast-notification';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 2500);
 }
 </script>
 @endpush

@@ -15,13 +15,18 @@
     {{-- Navbar --}}
     <nav class="navbar">
         <div class="container navbar-inner">
-            <a href="{{ auth()->check() && auth()->user()->isSeller() ? '/admin/dashboard' : '/menu' }}" class="navbar-brand">
+            <a href="/menu" class="navbar-brand">
                 <span class="brand-icon">🔥</span>
                 <span class="brand-text">Sego Sambelan</span>
             </a>
 
-            @auth
-            <div class="navbar-menu">
+            <div class="navbar-menu" id="navbar-menu">
+                {{-- Link Menu selalu tampil (guest & auth buyer) --}}
+                @guest
+                <a href="/menu" class="nav-link {{ request()->is('menu*') ? 'active' : '' }}">Menu</a>
+                @endguest
+
+                @auth
                 @if(auth()->user()->isBuyer())
                 <a href="/menu" class="nav-link {{ request()->is('menu*') ? 'active' : '' }}">Menu</a>
                 <a href="/orders/history" class="nav-link {{ request()->is('orders*') ? 'active' : '' }}">Pesanan</a>
@@ -40,11 +45,20 @@
                         <button type="submit" class="nav-link btn-logout">Logout</button>
                     </form>
                 </div>
+                @endauth
+
+                {{-- Tombol Login & Daftar untuk tamu --}}
+                @guest
+                <div class="nav-guest-actions">
+                    <a href="/login" class="nav-link">Masuk</a>
+                    <a href="/register" class="btn btn-primary btn-sm">Daftar</a>
+                </div>
+                @endguest
             </div>
+
             <button class="hamburger" id="hamburger" aria-label="Menu">
                 <span></span><span></span><span></span>
             </button>
-            @endauth
         </div>
     </nav>
 

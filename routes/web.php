@@ -15,7 +15,13 @@ use App\Http\Controllers\Admin\PaymentSettingController;
 use Illuminate\Support\Facades\Route;
 
 // ─── Public / Guest ─────────────────────────────────────
-Route::get('/', fn() => redirect('/login'));
+Route::get('/', fn() => redirect('/menu'));
+
+// Catalog publik (bisa diakses tanpa login)
+Route::get('/menu', [MenuController::class, 'index'])->name('menu');
+
+// Tambah ke keranjang (guest akan di-redirect ke login)
+Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -37,12 +43,8 @@ Route::middleware('auth')->group(function () {
 
 // ─── Buyer: Protected Routes (auth + profile complete) ──
 Route::middleware(['auth', 'profile.complete'])->group(function () {
-    // Menu / Catalog
-    Route::get('/menu', [MenuController::class, 'index'])->name('menu');
-
     // Shopping Cart
     Route::get('/cart', [CartController::class, 'index'])->name('cart');
-    Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
     Route::patch('/cart/update', [CartController::class, 'update'])->name('cart.update');
     Route::delete('/cart/remove', [CartController::class, 'remove'])->name('cart.remove');
     Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
