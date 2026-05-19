@@ -11,6 +11,7 @@ use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\PaymentSettingController;
 use Illuminate\Support\Facades\Route;
 
 // ─── Public / Guest ─────────────────────────────────────
@@ -50,6 +51,8 @@ Route::middleware(['auth', 'profile.complete'])->group(function () {
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
     Route::post('/checkout/place-order', [CheckoutController::class, 'placeOrder'])->name('checkout.place');
     Route::get('/checkout/payment/{order}', [CheckoutController::class, 'showPayment'])->name('checkout.payment');
+    Route::get('/checkout/manual/{order}', [CheckoutController::class, 'showManualPayment'])->name('checkout.manual');
+    Route::post('/checkout/manual/{order}/proof', [CheckoutController::class, 'uploadProof'])->name('checkout.manual.proof');
 
     // Order Tracking
     Route::get('/orders/history', [OrderTrackingController::class, 'history'])->name('orders.history');
@@ -73,4 +76,9 @@ Route::middleware(['auth', 'role.seller'])->prefix('admin')->name('admin.')->gro
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
     Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
+    Route::post('/orders/{order}/confirm-payment', [OrderController::class, 'confirmPayment'])->name('orders.confirm-payment');
+    Route::post('/orders/{order}/start-processing', [OrderController::class, 'startProcessing'])->name('orders.start-processing');
+
+    Route::get('/payment-settings', [PaymentSettingController::class, 'edit'])->name('payment-settings.edit');
+    Route::put('/payment-settings', [PaymentSettingController::class, 'update'])->name('payment-settings.update');
 });

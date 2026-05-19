@@ -13,14 +13,43 @@ class MidtransService
         \Midtrans\Config::$isProduction = config('midtrans.is_production');
         \Midtrans\Config::$isSanitized = config('midtrans.is_sanitized');
         \Midtrans\Config::$is3ds = config('midtrans.is_3ds');
-        
-        // Mematikan verifikasi SSL khusus untuk testing lokal di Windows (agar tidak error cURL 60)
-        if (!config('midtrans.is_production')) {
+
+        $this->applyCurlSslOptions();
+    }
+
+    /**
+     * Atur verifikasi SSL untuk cURL Midtrans (Windows / CA hilang).
+     * SDK midtrans-php: jika $curlOptions tidak kosong, wajib ada CURLOPT_HTTPHEADER (konstanta 10023)
+     * agar ApiRequestor tidak memicu "Undefined array key 10023".
+     */
+    private function applyCurlSslOptions(): void
+    {
+        $cainfo = config('midtrans.curl_cainfo');
+        if (is_string($cainfo) && $cainfo !== '' && is_file($cainfo)) {
             \Midtrans\Config::$curlOptions = [
-                CURLOPT_SSL_VERIFYPEER => false,
-                CURLOPT_SSL_VERIFYHOST => false,
+                CURLOPT_CAINFO => $cainfo,
+                CURLOPT_HTTPHEADER => [
+                    'X-Sego-Sambelan-Curl: cainfo',
+                ],
             ];
+
+            return;
         }
+
+        $relaxSsl = ! config('midtrans.verify_ssl')
+            || (PHP_OS_FAMILY === 'Windows' && app()->environment('local'));
+
+        if (! $relaxSsl) {
+            return;
+        }
+
+        \Midtrans\Config::$curlOptions = [
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => false,
+            CURLOPT_HTTPHEADER => [
+                'X-Sego-Sambelan-Env: ssl-relaxed',
+            ],
+        ];
     }
 
     /**

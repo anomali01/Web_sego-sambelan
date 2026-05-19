@@ -20,6 +20,12 @@
                     2 => ['icon' => '👨‍🍳', 'text' => 'Sego Sambelan sedang disiapkan! 🔥'],
                     3 => $order->isDelivery() ? ['icon' => '🚚', 'text' => 'Pesanan dalam perjalanan!'] : ['icon' => '🍽️', 'text' => 'Pesanan siap diambil!'],
                 ];
+                if ($order->payment?->isManual() && $order->payment->isPaid() && $order->status === 'pending') {
+                    $messages[1] = ['icon' => '✅', 'text' => 'Pembayaran dikonfirmasi — menunggu mulai dimasak'];
+                }
+                if ($order->payment?->isManual() && $order->payment->isPending() && $order->payment->hasProof()) {
+                    $messages[0] = ['icon' => '📤', 'text' => 'Bukti terkirim — menunggu konfirmasi penjual'];
+                }
                 $lastIdx = count($statusSteps) - 1;
                 $msg = $currentStepIndex === $lastIdx
                     ? ['icon' => '✅', 'text' => 'Pesanan selesai! Selamat menikmati! 🎉']
@@ -45,9 +51,22 @@
         @endif
 
         {{-- Pay Now (if pending payment) --}}
-        @if($order->status === 'pending' && $order->payment && $order->payment->isPending() && $order->payment->snap_token)
+        @if($order->status === 'pending' && $order->payment && $order->payment->isPending())
         <div class="glass-card" style="text-align:center; padding:1.5rem;">
+            @if($order->payment->isManual())
+            <p style="margin-bottom:1rem;">Transfer ke rekening warung lalu upload bukti. Penjual akan verifikasi pembayaran, lalu mulai menyiapkan pesanan.</p>
+            <a href="/checkout/manual/{{ $order->id }}" class="btn btn-primary btn-lg">🏦 Lihat Rekening & Upload Bukti</a>
+            @elseif($order->payment->snap_token)
             <a href="/checkout/payment/{{ $order->id }}" class="btn btn-primary btn-lg">💳 Bayar Sekarang</a>
+            @endif
+        </div>
+        @elseif($order->payment?->isManual() && $order->payment->isPending() && $order->payment->hasProof())
+        <div class="glass-card alert alert-info" style="text-align:center;">
+            Bukti transfer sudah dikirim. Menunggu penjual memverifikasi pembayaran.
+        </div>
+        @elseif($order->payment?->isManual() && $order->payment->isPaid() && $order->status === 'pending')
+        <div class="glass-card alert alert-success" style="text-align:center;">
+            Pembayaran sudah dikonfirmasi penjual. Pesanan akan segera mulai disiapkan.
         </div>
         @endif
 

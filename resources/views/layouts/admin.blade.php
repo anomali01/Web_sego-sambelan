@@ -25,6 +25,9 @@
                 <a href="/admin/products" class="sidebar-link {{ request()->is('admin/products*') ? 'active' : '' }}">
                     <span class="sidebar-icon">🍽️</span> Menu
                 </a>
+                <a href="/admin/payment-settings" class="sidebar-link {{ request()->is('admin/payment-settings*') ? 'active' : '' }}">
+                    <span class="sidebar-icon">🏦</span> Pembayaran Manual
+                </a>
                 <a href="/admin/orders" class="sidebar-link {{ request()->is('admin/orders*') ? 'active' : '' }}">
                     <span class="sidebar-icon">📦</span> Pesanan
                     @php $pendingCount = \App\Models\Order::where('status','pending')->count(); @endphp

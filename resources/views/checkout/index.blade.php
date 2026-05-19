@@ -31,7 +31,6 @@
             </div>
             @error('order_type')<span class="form-error">{{ $message }}</span>@enderror
 
-            {{-- Delivery Address --}}
             <div id="delivery-info" class="order-type-detail">
                 <div class="address-display">
                     <h4>📍 Alamat Pengiriman</h4>
@@ -40,7 +39,6 @@
                 </div>
             </div>
 
-            {{-- Dine-In Table Number --}}
             <div id="dinein-info" class="order-type-detail" style="display:none;">
                 <div class="form-group">
                     <label for="table_number">Nomor Meja</label>
@@ -50,7 +48,6 @@
             </div>
         </div>
 
-        {{-- Order Summary --}}
         <div class="checkout-section glass-card">
             <h2>Ringkasan Pesanan</h2>
             <div class="checkout-items">
@@ -65,7 +62,31 @@
             <a href="/cart" class="link-primary">Edit Keranjang</a>
         </div>
 
-        {{-- Notes --}}
+        <div class="checkout-section glass-card">
+            <h2>Metode Pembayaran</h2>
+            <div class="order-type-cards">
+                <label class="order-type-card">
+                    <input type="radio" name="payment_channel" value="midtrans" {{ old('payment_channel', 'midtrans') === 'midtrans' ? 'checked' : '' }} onchange="updatePayButton()">
+                    <div class="order-type-content">
+                        <span class="order-type-icon">💳</span>
+                        <h3>Midtrans</h3>
+                        <p>GoPay, VA, QRIS, kartu (otomatis)</p>
+                    </div>
+                </label>
+                @if($paymentSettings->manual_enabled && $paymentSettings->isConfigured())
+                <label class="order-type-card">
+                    <input type="radio" name="payment_channel" value="manual" {{ old('payment_channel') === 'manual' ? 'checked' : '' }} onchange="updatePayButton()">
+                    <div class="order-type-content">
+                        <span class="order-type-icon">🏦</span>
+                        <h3>Transfer Manual</h3>
+                        <p>Ke rekening / QRIS warung</p>
+                    </div>
+                </label>
+                @endif
+            </div>
+            @error('payment_channel')<span class="form-error">{{ $message }}</span>@enderror
+        </div>
+
         <div class="checkout-section glass-card">
             <div class="form-group">
                 <label for="notes">Catatan Khusus (Opsional)</label>
@@ -73,13 +94,12 @@
             </div>
         </div>
 
-        {{-- Total & Pay --}}
         <div class="checkout-section glass-card checkout-total">
             <div class="summary-row total">
                 <span>Total Pembayaran</span>
                 <span class="total-price">Rp {{ number_format($total, 0, ',', '.') }}</span>
             </div>
-            <button type="submit" class="btn btn-primary btn-full btn-lg">
+            <button type="submit" id="pay-submit-btn" class="btn btn-primary btn-full btn-lg">
                 Bayar Sekarang 💳
             </button>
         </div>
@@ -89,11 +109,23 @@
 @push('scripts')
 <script>
 function toggleOrderType() {
-    const delivery = document.querySelector('input[value="delivery"]').checked;
+    const delivery = document.querySelector('input[name="order_type"][value="delivery"]').checked;
     document.getElementById('delivery-info').style.display = delivery ? 'block' : 'none';
     document.getElementById('dinein-info').style.display = delivery ? 'none' : 'block';
 }
-document.addEventListener('DOMContentLoaded', toggleOrderType);
+function updatePayButton() {
+    const manual = document.querySelector('input[name="payment_channel"][value="manual"]');
+    const btn = document.getElementById('pay-submit-btn');
+    if (manual && manual.checked) {
+        btn.textContent = 'Lanjut ke Instruksi Transfer 🏦';
+    } else {
+        btn.textContent = 'Bayar Sekarang 💳';
+    }
+}
+document.addEventListener('DOMContentLoaded', function() {
+    toggleOrderType();
+    updatePayButton();
+});
 </script>
 @endpush
 @endsection

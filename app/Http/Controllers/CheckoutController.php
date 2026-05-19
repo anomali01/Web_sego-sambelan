@@ -6,9 +6,11 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Models\Product;
+use App\Models\StorePaymentSetting;
 use App\Services\MidtransService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class CheckoutController extends Controller
 {
@@ -25,12 +27,13 @@ class CheckoutController extends Controller
 
         $total = collect($cart)->sum('subtotal');
         $profile = $request->user()->profile;
+        $paymentSettings = StorePaymentSetting::current();
 
-        return view('checkout.index', compact('cart', 'total', 'profile'));
+        return view('checkout.index', compact('cart', 'total', 'profile', 'paymentSettings'));
     }
 
     /**
-     * Place an order and create Midtrans payment.
+     * Place an order (Midtrans or manual transfer).
      */
     public function placeOrder(Request $request, MidtransService $midtrans)
     {
@@ -44,72 +47,35 @@ class CheckoutController extends Controller
             'order_type' => ['required', 'in:delivery,dine_in'],
             'table_number' => ['required_if:order_type,dine_in', 'nullable', 'string', 'max:10'],
             'notes' => ['nullable', 'string', 'max:500'],
+            'payment_channel' => ['required', 'in:midtrans,manual'],
         ]);
+
+        $settings = StorePaymentSetting::current();
+
+        if ($validated['payment_channel'] === 'manual') {
+            if (! $settings->manual_enabled || ! $settings->isConfigured()) {
+                return back()->with('error', 'Pembayaran transfer manual belum diatur oleh penjual.');
+            }
+        }
 
         try {
             $order = DB::transaction(function () use ($cart, $validated, $request) {
-                $user = $request->user();
-                $totalPrice = 0;
-
-                // Create order
-                $order = Order::create([
-                    'user_id' => $user->id,
-                    'order_number' => Order::generateOrderNumber(),
-                    'order_type' => $validated['order_type'],
-                    'table_number' => $validated['table_number'] ?? null,
-                    'total_price' => 0,
-                    'status' => 'pending',
-                    'delivery_address' => $validated['order_type'] === 'delivery'
-                        ? $user->profile->full_address
-                        : null,
-                    'notes' => $validated['notes'] ?? null,
-                ]);
-
-                // Create order items
-                foreach ($cart as $productId => $item) {
-                    $product = Product::findOrFail($productId);
-
-                    // Check stock
-                    if ($product->stock < $item['quantity']) {
-                        throw new \Exception("Stok {$product->name} tidak mencukupi.");
-                    }
-
-                    OrderItem::create([
-                        'order_id' => $order->id,
-                        'product_id' => $productId,
-                        'quantity' => $item['quantity'],
-                        'unit_price' => $product->price,
-                        'subtotal' => $product->price * $item['quantity'],
-                    ]);
-
-                    $totalPrice += $product->price * $item['quantity'];
-
-                    // Deduct stock
-                    $product->decrement('stock', $item['quantity']);
-                }
-
-                // Update total price
-                $order->update(['total_price' => $totalPrice]);
-
-                // Create payment record
-                Payment::create([
-                    'order_id' => $order->id,
-                    'payment_status' => 'pending',
-                    'amount' => $totalPrice,
-                ]);
-
-                return $order;
+                return $this->createOrderFromCart($cart, $validated, $request);
             });
 
-            // Generate Midtrans snap token
+            $paymentMethod = $validated['payment_channel'];
+            $order->payment->update(['payment_method' => $paymentMethod]);
+
+            session()->forget('cart');
+
+            if ($paymentMethod === 'manual') {
+                return redirect("/checkout/manual/{$order->id}")
+                    ->with('info', 'Silakan transfer sesuai instruksi di bawah.');
+            }
+
             $order->load(['orderItems.product', 'user.profile', 'payment']);
             $snapToken = $midtrans->createSnapToken($order);
-
-            // Store snap token
             $order->payment->update(['snap_token' => $snapToken]);
-
-            // Clear cart
-            session()->forget('cart');
 
             return redirect("/checkout/payment/{$order->id}");
 
@@ -119,16 +85,19 @@ class CheckoutController extends Controller
     }
 
     /**
-     * Show payment page with Midtrans Snap.
+     * Show Midtrans Snap payment page.
      */
     public function showPayment(Order $order, Request $request)
     {
-        // Ensure buyer owns this order
         if ($order->user_id !== $request->user()->id) {
             abort(403);
         }
 
         $order->load(['orderItems.product', 'payment']);
+
+        if ($order->payment?->isManual()) {
+            return redirect("/checkout/manual/{$order->id}");
+        }
 
         return view('checkout.payment', [
             'order' => $order,
@@ -136,5 +105,110 @@ class CheckoutController extends Controller
             'clientKey' => config('midtrans.client_key'),
             'snapUrl' => config('midtrans.snap_url'),
         ]);
+    }
+
+    /**
+     * Show manual transfer instructions (bank + QRIS).
+     */
+    public function showManualPayment(Order $order, Request $request)
+    {
+        if ($order->user_id !== $request->user()->id) {
+            abort(403);
+        }
+
+        $order->load(['orderItems.product', 'payment']);
+        $settings = StorePaymentSetting::current();
+
+        if (! $order->payment?->isManual()) {
+            return redirect("/checkout/payment/{$order->id}");
+        }
+
+        return view('checkout.manual', compact('order', 'settings'));
+    }
+
+    /**
+     * Upload transfer proof for manual payment.
+     */
+    public function uploadProof(Request $request, Order $order)
+    {
+        if ($order->user_id !== $request->user()->id) {
+            abort(403);
+        }
+
+        $payment = $order->payment;
+
+        if (! $payment?->isManual() || $payment->isPaid()) {
+            return redirect("/orders/{$order->id}/tracking");
+        }
+
+        $validated = $request->validate([
+            'sender_name' => ['required', 'string', 'max:100'],
+            'proof' => ['required', 'image', 'max:5120'],
+        ]);
+
+        if ($payment->proof_path) {
+            Storage::disk('public')->delete($payment->proof_path);
+        }
+
+        $path = $request->file('proof')->store('payment-proofs', 'public');
+
+        $payment->update([
+            'sender_name' => $validated['sender_name'],
+            'proof_path' => $path,
+        ]);
+
+        return redirect("/orders/{$order->id}/tracking")
+            ->with('success', 'Bukti transfer terkirim. Menunggu konfirmasi penjual.');
+    }
+
+    /**
+     * Create order, items, and pending payment from cart.
+     */
+    private function createOrderFromCart(array $cart, array $validated, Request $request): Order
+    {
+        $user = $request->user();
+        $totalPrice = 0;
+
+        $order = Order::create([
+            'user_id' => $user->id,
+            'order_number' => Order::generateOrderNumber(),
+            'order_type' => $validated['order_type'],
+            'table_number' => $validated['table_number'] ?? null,
+            'total_price' => 0,
+            'status' => 'pending',
+            'delivery_address' => $validated['order_type'] === 'delivery'
+                ? $user->profile->full_address
+                : null,
+            'notes' => $validated['notes'] ?? null,
+        ]);
+
+        foreach ($cart as $productId => $item) {
+            $product = Product::findOrFail($productId);
+
+            if ($product->stock < $item['quantity']) {
+                throw new \Exception("Stok {$product->name} tidak mencukupi.");
+            }
+
+            OrderItem::create([
+                'order_id' => $order->id,
+                'product_id' => $productId,
+                'quantity' => $item['quantity'],
+                'unit_price' => $product->price,
+                'subtotal' => $product->price * $item['quantity'],
+            ]);
+
+            $totalPrice += $product->price * $item['quantity'];
+            $product->decrement('stock', $item['quantity']);
+        }
+
+        $order->update(['total_price' => $totalPrice]);
+
+        Payment::create([
+            'order_id' => $order->id,
+            'payment_status' => 'pending',
+            'amount' => $totalPrice,
+        ]);
+
+        return $order->fresh(['payment']);
     }
 }

@@ -16,6 +16,8 @@ class Payment extends Model
         'payment_status',
         'amount',
         'snap_token',
+        'proof_path',
+        'sender_name',
         'transaction_id',
         'gateway_response',
         'paid_at',
@@ -47,6 +49,30 @@ class Payment extends Model
     public function isPending(): bool
     {
         return $this->payment_status === 'pending';
+    }
+
+    public function isMidtrans(): bool
+    {
+        return $this->payment_method === 'midtrans';
+    }
+
+    public function isManual(): bool
+    {
+        return $this->payment_method === 'manual';
+    }
+
+    public function hasProof(): bool
+    {
+        return ! empty($this->proof_path);
+    }
+
+    public function getProofUrlAttribute(): ?string
+    {
+        if (! $this->proof_path) {
+            return null;
+        }
+
+        return \Illuminate\Support\Facades\Storage::disk('public')->url($this->proof_path);
     }
 
     public function getStatusBadgeClassAttribute(): string
