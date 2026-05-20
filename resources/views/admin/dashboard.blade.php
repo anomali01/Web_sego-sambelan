@@ -3,6 +3,46 @@
 @section('page-title', 'Dashboard Penjual')
 
 @section('content')
+<!-- Banner Selamat Datang Premium -->
+<div class="admin-welcome-banner glass-card" style="display: flex; align-items: center; justify-content: space-between; padding: 2.5rem; margin-bottom: 2rem; border-left: 6px solid var(--primary); background: linear-gradient(135deg, rgba(232,184,75,0.05), rgba(15,4,4,0.85)), url('/images/hero_bg_texture.png.png'); background-size: cover; border-radius: var(--radius); overflow: hidden; position: relative;">
+    <div style="flex-grow: 1; z-index: 2; padding-right: 1.5rem;">
+        <h1 style="font-size: 2.2rem; font-weight: 800; color: white; margin: 0 0 0.5rem 0; text-shadow: 0 2px 10px rgba(0,0,0,0.6); line-height: 1.2;">Selamat Datang Kembali, Penjual! 🔥</h1>
+        <p style="color: #F5E6C8; font-size: 1.05rem; max-width: 650px; line-height: 1.6; margin: 0; text-shadow: 0 1px 5px rgba(0,0,0,0.6); opacity: 0.95;">
+            Kelola menu lezat, pantau pesanan pelanggan, dan analisa pergerakan kas masuk Sego Sambelan Anda di satu tempat terpusat yang premium.
+        </p>
+    </div>
+    <div class="banner-image-wrapper" style="max-height: 140px; display: flex; align-items: center; justify-content: center; z-index: 2;">
+        <img src="{{ asset('images/hero_food_banner.png') }}" alt="Sego Sambelan Banner" style="max-height: 160px; transform: scale(1.15) rotate(-3deg); filter: drop-shadow(0 10px 25px rgba(0,0,0,0.6)); transition: transform 0.3s ease;">
+    </div>
+    
+    {{-- Aksen pancaran bercahaya --}}
+    <div style="position: absolute; top: -50px; right: -50px; width: 250px; height: 250px; background: radial-gradient(circle, rgba(232,184,75,0.15) 0%, rgba(232,184,75,0) 70%); z-index: 1; pointer-events: none;"></div>
+</div>
+
+<style>
+    @media (max-width: 768px) {
+        .admin-welcome-banner {
+            flex-direction: column;
+            text-align: center;
+            padding: 2rem 1.5rem !important;
+        }
+        .admin-welcome-banner div {
+            padding-right: 0 !important;
+            margin-bottom: 1.5rem;
+        }
+        .admin-welcome-banner h1 {
+            font-size: 1.8rem !important;
+        }
+        .banner-image-wrapper {
+            max-height: 110px !important;
+        }
+        .banner-image-wrapper img {
+            max-height: 120px !important;
+            transform: scale(1.1) rotate(0deg) !important;
+        }
+    }
+</style>
+
 <!-- Ringkasan Statistik Pendapatan -->
 <div class="stats-grid">
     <div class="stat-card glass-card">
