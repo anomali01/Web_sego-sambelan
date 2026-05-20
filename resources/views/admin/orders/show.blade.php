@@ -45,43 +45,95 @@
             @endif
 
             @if($manualUnpaid)
-            <form action="/admin/orders/{{ $order->id }}/confirm-payment" method="POST" style="margin-bottom:.75rem;" onsubmit="return confirm('Konfirmasi bahwa pembayaran sudah masuk ke rekening?')">
-                @csrf
-                <button type="submit" class="btn btn-primary">① Konfirmasi Pembayaran Diterima</button>
-            </form>
+            <div class="alert alert-warning" style="margin:0 0 .75rem;">
+                ⏳ Menunggu verifikasi pembayaran manual.
+            </div>
             @else
             <p class="alert alert-success" style="margin:0 0 .75rem;">✓ Pembayaran sudah dikonfirmasi.</p>
-            @endif
-
-            @if($canStartCooking)
-            <form action="/admin/orders/{{ $order->id }}/start-processing" method="POST" onsubmit="return confirm('Mulai menyiapkan pesanan ini?')">
-                @csrf
-                <button type="submit" class="btn btn-primary">② Mulai Menyiapkan Pesanan 👨‍🍳</button>
-            </form>
             @endif
         </div>
         @endif
 
-        <h3 style="margin-top:1rem;">Ubah Status</h3>
-        @if($order->payment?->isManual() && $order->payment->isPending())
-        <p class="alert alert-warning" style="font-size:.9rem;">Untuk transfer manual: konfirmasi pembayaran dulu sebelum ubah status ke Proses/Delivery/Selesai.</p>
-        @endif
-        <form action="/admin/orders/{{ $order->id }}/status" method="POST" class="form-row">
-            @csrf @method('PATCH')
-            <select name="status" class="form-input">
-                @foreach(['pending','processed','delivered','completed','canceled'] as $s)
-                @php
-                    $blocked = $order->payment?->isManual()
-                        && $order->payment->isPending()
-                        && in_array($s, ['processed', 'delivered', 'completed']);
-                @endphp
-                <option value="{{ $s }}" {{ $order->status === $s ? 'selected' : '' }} {{ $blocked ? 'disabled' : '' }}>
-                    {{ ucfirst($s) }}{{ $blocked ? ' (konfirmasi bayar dulu)' : '' }}
-                </option>
-                @endforeach
-            </select>
-            <button type="submit" class="btn btn-primary">Update</button>
-        </form>
+        <h3 style="margin-top:1.5rem; border-top:1px dashed var(--border); padding-top:1rem;">Verifikasi & Tindakan Pesanan</h3>
+        <div class="order-action-panel" style="margin-top:1rem; display:flex; gap:.75rem; flex-wrap:wrap; align-items:center;">
+            @if($order->status === 'pending')
+                @if($order->payment?->isManual())
+                    @if($order->payment->isPending())
+                        <form action="/admin/orders/{{ $order->id }}/confirm-payment" method="POST" class="inline" onsubmit="return confirm('Konfirmasi bahwa pembayaran sudah masuk ke rekening?')">
+                            @csrf
+                            <button type="submit" class="btn btn-primary">① Verifikasi Pembayaran Diterima</button>
+                        </form>
+                    @else
+                        <form action="/admin/orders/{{ $order->id }}/start-processing" method="POST" class="inline" onsubmit="return confirm('Mulai menyiapkan pesanan ini?')">
+                            @csrf
+                            <button type="submit" class="btn btn-success">② Mulai Menyiapkan Pesanan 👨‍🍳</button>
+                        </form>
+                    @endif
+                @else
+                    @if($order->payment?->isPaid())
+                        <form action="/admin/orders/{{ $order->id }}/status" method="POST" class="inline">
+                            @csrf @method('PATCH')
+                            <input type="hidden" name="status" value="processed">
+                            <button type="submit" class="btn btn-success">👨‍🍳 Mulai Menyiapkan Pesanan</button>
+                        </form>
+                    @else
+                        <div class="alert alert-warning" style="margin:0; width:100%;">
+                            ⏳ Menunggu pembayaran otomatis via Midtrans lunas...
+                        </div>
+                    @endif
+                @endif
+
+                {{-- Batalkan Button --}}
+                <form action="/admin/orders/{{ $order->id }}/status" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan pesanan ini?')">
+                    @csrf @method('PATCH')
+                    <input type="hidden" name="status" value="canceled">
+                    <button type="submit" class="btn btn-danger">❌ Batalkan Pesanan</button>
+                </form>
+
+            @elseif($order->status === 'processed')
+                @if($order->isDelivery())
+                    <form action="/admin/orders/{{ $order->id }}/status" method="POST" class="inline" onsubmit="return confirm('Kirim pesanan ini sekarang?')">
+                        @csrf @method('PATCH')
+                        <input type="hidden" name="status" value="delivered">
+                        <button type="submit" class="btn btn-info">🚚 Kirim/Antar Pesanan</button>
+                    </form>
+                @else
+                    <form action="/admin/orders/{{ $order->id }}/status" method="POST" class="inline" onsubmit="return confirm('Sajikan pesanan dan selesaikan transaksi?')">
+                        @csrf @method('PATCH')
+                        <input type="hidden" name="status" value="completed">
+                        <button type="submit" class="btn btn-success">🍽️ Sajikan & Selesai</button>
+                    </form>
+                @endif
+
+                <form action="/admin/orders/{{ $order->id }}/status" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan pesanan ini?')">
+                    @csrf @method('PATCH')
+                    <input type="hidden" name="status" value="canceled">
+                    <button type="submit" class="btn btn-danger">❌ Batalkan Pesanan</button>
+                </form>
+
+            @elseif($order->status === 'delivered')
+                <form action="/admin/orders/{{ $order->id }}/status" method="POST" class="inline" onsubmit="return confirm('Tandai pesanan ini sudah selesai diterima?')">
+                    @csrf @method('PATCH')
+                    <input type="hidden" name="status" value="completed">
+                    <button type="submit" class="btn btn-success">✅ Selesai Diterima</button>
+                </form>
+
+                <form action="/admin/orders/{{ $order->id }}/status" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan pesanan ini?')">
+                    @csrf @method('PATCH')
+                    <input type="hidden" name="status" value="canceled">
+                    <button type="submit" class="btn btn-danger">❌ Batalkan Pesanan</button>
+                </form>
+
+            @elseif($order->status === 'completed')
+                <div class="alert alert-success" style="margin:0; width:100%; display:flex; align-items:center; gap:0.5rem;">
+                    <span>✅</span> Pesanan ini sudah selesai sepenuhnya dan terarsip dalam riwayat pesanan sukses.
+                </div>
+            @elseif($order->status === 'canceled')
+                <div class="alert alert-error" style="margin:0; width:100%; display:flex; align-items:center; gap:0.5rem;">
+                    <span>❌</span> Pesanan ini telah dibatalkan dan terarsip dalam riwayat pembatalan.
+                </div>
+            @endif
+        </div>
     </div>
 
     <div class="card glass-card">

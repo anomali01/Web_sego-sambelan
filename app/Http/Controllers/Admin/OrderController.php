@@ -32,8 +32,9 @@ class OrderController extends Controller
             'all' => Order::count(),
             'pending' => Order::where('status', 'pending')->count(),
             'processed' => Order::where('status', 'processed')->count(),
-            'delivery' => Order::where('order_type', 'delivery')->count(),
-            'dine_in' => Order::where('order_type', 'dine_in')->count(),
+            'delivered' => Order::where('status', 'delivered')->count(),
+            'completed' => Order::where('status', 'completed')->count(),
+            'canceled' => Order::where('status', 'canceled')->count(),
         ];
 
         return view('admin.orders.index', compact('orders', 'counts'));
