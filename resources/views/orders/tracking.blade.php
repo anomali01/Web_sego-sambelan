@@ -105,8 +105,22 @@
             </div>
         </div>
 
-        <div class="tracking-actions">
+        <!-- Hubungi Admin Info Box -->
+        <div class="glass-card" style="margin-top: 1.5rem; border-left: 4px solid #25D366; padding: 1rem; display: flex; align-items: center; gap: 1rem; background: rgba(37,211,102,0.05); text-align: left;">
+            <div style="font-size: 2rem;">💬</div>
+            <div style="flex-grow: 1;">
+                <h4 style="color: #25D366; margin: 0; font-size: 0.95rem; font-weight: 700;">Butuh Bantuan atau Ingin Kirim Foto?</h4>
+                <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                    Hubungi admin kami langsung melalui WhatsApp untuk bantuan cepat, perubahan pesanan, atau melampirkan foto bukti.
+                </p>
+            </div>
+        </div>
+
+        <div class="tracking-actions" style="margin-top: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
             <a href="/menu" class="btn btn-primary">Pesan Lagi 🍛</a>
+            <a href="https://wa.me/{{ env('STORE_WHATSAPP', '628123456789') }}?text=Halo%20Admin%20Sego%20Sambelan%2C%20saya%20ingin%20bertanya%20mengenai%20pesanan%20saya%20dengan%20nomor%20order%20*{{ urlencode($order->order_number) }}*." target="_blank" class="btn" style="background: #25D366; color: white; display: inline-flex; align-items: center; gap: 0.5rem; border: none; font-weight: bold; box-shadow: 0 4px 15px rgba(37,211,102,0.3);">
+                💬 Tanya via WhatsApp
+            </a>
             <a href="/orders/history" class="btn btn-outline">Riwayat Pesanan</a>
         </div>
     </div>

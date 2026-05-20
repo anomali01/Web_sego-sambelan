@@ -146,6 +146,21 @@
             <div class="detail-row"><span>Alamat</span><span>{{ $order->delivery_address }}</span></div>
             @endif
         </div>
+
+        @php
+            $rawPhone = $order->user->profile?->phone ?? '';
+            $cleanPhone = preg_replace('/[^0-9]/', '', $rawPhone);
+            if (strpos($cleanPhone, '0') === 0) {
+                $cleanPhone = '62' . substr($cleanPhone, 1);
+            }
+        @endphp
+        @if($cleanPhone)
+        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); text-align: right;">
+            <a href="https://wa.me/{{ $cleanPhone }}?text=Halo%20{{ urlencode($order->user->name) }}%2C%20saya%20Admin%20dari%20Sego%20Sambelan.%20Menghubungi%20terkait%20pesanan%20Anda%20*{{ urlencode($order->order_number) }}*." target="_blank" class="btn btn-sm" style="background: #25D366; color: white; display: inline-flex; align-items: center; gap: 0.5rem; border: none; font-weight: bold; box-shadow: 0 4px 15px rgba(37,211,102,0.3);">
+                💬 Hubungi Pembeli (WA)
+            </a>
+        </div>
+        @endif
     </div>
 </div>
 
