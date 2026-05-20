@@ -112,10 +112,102 @@
     </div>
 </div>
 
-{{-- Auto-refresh for live tracking --}}
-@if(!in_array($order->status, ['completed', 'canceled']))
+{{-- Auto-refresh and Live Notifications --}}
 @push('scripts')
-<script>setTimeout(() => location.reload(), 15000);</script>
+<script>
+    const orderId = "{{ $order->id }}";
+    const currentStatus = "{{ $order->status }}";
+    const currentPaymentStatus = "{{ $order->payment?->status ?? 'none' }}";
+
+    function playNotificationChime() {
+        try {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const notes = [523.25, 659.25, 783.99]; // C5, E5, G5 (Ascending Premium Chime)
+            notes.forEach((freq, idx) => {
+                setTimeout(() => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.45);
+                    osc.start(audioCtx.currentTime);
+                    osc.stop(audioCtx.currentTime + 0.45);
+                }, idx * 150);
+            });
+        } catch (e) {
+            console.warn("Audio Context blocked by browser autoplay policy or unsupported.", e);
+        }
+    }
+
+    function showOrderToast(message) {
+        // Create toast dynamically
+        const toast = document.createElement('div');
+        toast.className = 'toast-notification';
+        toast.style.borderLeft = '4px solid var(--primary)';
+        toast.innerHTML = `
+            <div style="font-weight: 800; color: var(--primary); margin-bottom: 4px; font-size: 0.95rem; display: flex; align-items: center; gap: 6px;">
+                <span>🔔</span> Update Pesanan
+            </div>
+            <div style="font-size: 0.88rem; color: #F5E6C8; line-height: 1.4;">${message}</div>
+        `;
+        document.body.appendChild(toast);
+        
+        // Animate Slide In
+        setTimeout(() => {
+            toast.classList.add('show');
+        }, 100);
+        
+        // Auto Remove after 7 seconds
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 400);
+        }, 7000);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const storageKey = 'order_status_' + orderId;
+        const storedStateRaw = localStorage.getItem(storageKey);
+        
+        const currentState = {
+            status: currentStatus,
+            payment: currentPaymentStatus
+        };
+        
+        if (storedStateRaw) {
+            const storedState = JSON.parse(storedStateRaw);
+            
+            // Check if status or payment status changed
+            if (storedState.status !== currentState.status || storedState.payment !== currentState.payment) {
+                playNotificationChime();
+                
+                let msg = 'Status pesanan Anda telah diperbarui!';
+                if (currentState.status === 'processing') {
+                    msg = 'Pesanan Anda sedang disiapkan di dapur! 🔥 Harap ditunggu.';
+                } else if (currentState.status === 'shipping') {
+                    msg = 'Pesanan Anda sedang dalam perjalanan ke lokasi Anda! 🚚';
+                } else if (currentState.status === 'completed') {
+                    msg = 'Pesanan selesai! Selamat menikmati hidangan lezat Sego Sambelan Anda! 🎉🍽️';
+                } else if (currentState.status === 'canceled') {
+                    msg = 'Pesanan Anda telah dibatalkan oleh penjual. ❌';
+                } else if (currentState.payment === 'paid' && storedState.payment !== 'paid') {
+                    msg = 'Pembayaran berhasil dikonfirmasi! Pesanan segera masuk antrean dapur. 💳';
+                }
+                
+                showOrderToast(msg);
+            }
+        }
+        
+        // Save state for future comparison
+        localStorage.setItem(storageKey, JSON.stringify(currentState));
+    });
+
+    // Auto reload status every 15 seconds if active
+    @if(!in_array($order->status, ['completed', 'canceled']))
+        setTimeout(() => location.reload(), 15000);
+    @endif
+</script>
 @endpush
-@endif
 @endsection

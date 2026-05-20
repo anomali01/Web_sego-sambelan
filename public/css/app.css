@@ -45,8 +45,8 @@ body {
     font-family: 'Inter', sans-serif;
     background-color: var(--bg-dark);
     background-image:
-        linear-gradient(rgba(13,4,4,0.82), rgba(13,4,4,0.82)),
-        url('/images/hero_bg_texture.png');
+        linear-gradient(rgba(15, 4, 4, 0.52), rgba(10, 2, 2, 0.78)),
+        url('/images/hero_bg_texture.png.png');
     background-attachment: fixed;
     background-size: cover;
     background-position: center;
