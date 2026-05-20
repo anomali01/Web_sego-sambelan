@@ -143,7 +143,21 @@
             <div class="detail-row"><span>Email</span><span>{{ $order->user->email }}</span></div>
             <div class="detail-row"><span>Telepon</span><span>{{ $order->user->profile?->phone ?? '-' }}</span></div>
             @if($order->delivery_address)
-            <div class="detail-row"><span>Alamat</span><span>{{ $order->delivery_address }}</span></div>
+            <div class="detail-row" style="align-items: flex-start;">
+                <span>Alamat</span>
+                <div>
+                    <span style="display: block; line-height: 1.4; color: var(--text-primary);">{{ $order->delivery_address }}</span>
+                    <div style="margin-top: 0.5rem;">
+                        <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode($order->delivery_address) }}" 
+                           target="_blank" 
+                           rel="noopener" 
+                           class="btn btn-sm btn-outline" 
+                           style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.25rem 0.5rem; font-size: 0.8rem; border-color: rgba(232,184,75,0.4); color: var(--primary);">
+                            🗺️ Buka di Google Maps
+                        </a>
+                    </div>
+                </div>
+            </div>
             @endif
         </div>
 
