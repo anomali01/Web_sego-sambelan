@@ -86,6 +86,17 @@
         </div>
     </footer>
 
+    {{-- Floating Cart Button --}}
+    @auth
+        @if(auth()->user()->isBuyer())
+            @php $cartCount = collect(session('cart', []))->sum('quantity'); @endphp
+            <a href="/cart" class="floating-cart {{ $cartCount > 0 ? 'show' : '' }}" id="floating-cart" title="Keranjang Belanja">
+                <span class="floating-cart-icon">🛒</span>
+                <span class="floating-cart-badge" id="floating-cart-badge">{{ $cartCount }}</span>
+            </a>
+        @endif
+    @endauth
+
     <script src="{{ asset('js/app.js') }}"></script>
     @stack('scripts')
 </body>

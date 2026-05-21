@@ -51,7 +51,11 @@ class GoogleAuthController extends Controller
 
         try {
             // 3. Exchange Auth Code for Access Token
-            $tokenResponse = Http::asForm()->post('https://oauth2.googleapis.com/token', [
+            $tokenRequest = Http::asForm();
+            if (config('app.env') === 'local') {
+                $tokenRequest = $tokenRequest->withoutVerifying();
+            }
+            $tokenResponse = $tokenRequest->post('https://oauth2.googleapis.com/token', [
                 'code' => $code,
                 'client_id' => config('services.google.client_id'),
                 'client_secret' => config('services.google.client_secret'),
@@ -66,7 +70,11 @@ class GoogleAuthController extends Controller
             $accessToken = $tokenResponse->json('access_token');
 
             // 4. Fetch User Profile Info using Access Token
-            $userResponse = Http::withToken($accessToken)->get('https://www.googleapis.com/oauth2/v3/userinfo');
+            $userRequest = Http::withToken($accessToken);
+            if (config('app.env') === 'local') {
+                $userRequest = $userRequest->withoutVerifying();
+            }
+            $userResponse = $userRequest->get('https://www.googleapis.com/oauth2/v3/userinfo');
 
             if ($userResponse->failed()) {
                 return redirect('/login')->with('error', 'Gagal mengambil informasi profil dari Google.');
@@ -121,7 +129,8 @@ class GoogleAuthController extends Controller
             return redirect('/menu')->with('success', 'Selamat datang kembali! 🍛');
 
         } catch (\Exception $e) {
-            return redirect('/login')->with('error', 'Terjadi kesalahan sistem saat menghubungi Google.');
+            logger()->error('Google Auth Error: ' . $e->getMessage(), ['exception' => $e]);
+            return redirect('/login')->with('error', 'Terjadi kesalahan sistem saat menghubungi Google: ' . $e->getMessage());
         }
     }
 }

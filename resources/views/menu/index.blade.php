@@ -139,6 +139,7 @@ function showLoginPrompt() {
 }
 
 function updateCartBadge(count) {
+    // 1. Update Navbar Badge
     let badge = document.getElementById('cart-badge');
     if (!badge) {
         const cartLink = document.querySelector('.cart-link');
@@ -154,6 +155,20 @@ function updateCartBadge(count) {
         badge.style.display = count > 0 ? 'flex' : 'none';
         badge.classList.add('badge-pop');
         setTimeout(() => badge.classList.remove('badge-pop'), 300);
+    }
+
+    // 2. Update Floating Cart Badge
+    let floatCart = document.getElementById('floating-cart');
+    let floatBadge = document.getElementById('floating-cart-badge');
+    if (floatCart && floatBadge) {
+        floatBadge.textContent = count;
+        if (count > 0) {
+            floatCart.classList.add('show');
+            floatBadge.classList.add('badge-pop');
+            setTimeout(() => floatBadge.classList.remove('badge-pop'), 300);
+        } else {
+            floatCart.classList.remove('show');
+        }
     }
 }
 
