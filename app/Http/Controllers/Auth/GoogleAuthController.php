@@ -21,8 +21,8 @@ class GoogleAuthController extends Controller
         session(['google_oauth_state' => $state]);
 
         $query = http_build_query([
-            'client_id' => env('GOOGLE_CLIENT_ID'),
-            'redirect_uri' => env('GOOGLE_REDIRECT_URL'),
+            'client_id' => config('services.google.client_id'),
+            'redirect_uri' => config('services.google.redirect'),
             'response_type' => 'code',
             'scope' => 'openid profile email',
             'state' => $state,
@@ -53,9 +53,9 @@ class GoogleAuthController extends Controller
             // 3. Exchange Auth Code for Access Token
             $tokenResponse = Http::asForm()->post('https://oauth2.googleapis.com/token', [
                 'code' => $code,
-                'client_id' => env('GOOGLE_CLIENT_ID'),
-                'client_secret' => env('GOOGLE_CLIENT_SECRET'),
-                'redirect_uri' => env('GOOGLE_REDIRECT_URL'),
+                'client_id' => config('services.google.client_id'),
+                'client_secret' => config('services.google.client_secret'),
+                'redirect_uri' => config('services.google.redirect'),
                 'grant_type' => 'authorization_code',
             ]);
 
@@ -80,6 +80,12 @@ class GoogleAuthController extends Controller
                 return redirect('/login')->with('error', 'Email tidak ditemukan dari akun Google Anda.');
             }
 
+            // Check if email is verified by Google
+            $emailVerified = $googleUser['email_verified'] ?? false;
+            if (!$emailVerified) {
+                return redirect('/login')->with('error', 'Autentikasi gagal: Email akun Google Anda belum terverifikasi.');
+            }
+
             // 5. Look up or Create User in local database
             $user = User::where('email', $email)->first();
 
@@ -90,12 +96,19 @@ class GoogleAuthController extends Controller
                     'email' => $email,
                     'password' => Hash::make(Str::random(24)), // Random secure password since they use Google
                     'role' => 'buyer', // Default role for Google login
+                    'email_verified_at' => now(), // Mark email as verified since it came from Google
                 ]);
 
                 Auth::login($user, true); // Log in with remember cookie set to true
 
                 return redirect('/profile/complete')
                     ->with('success', 'Pendaftaran berhasil! Silakan lengkapi profil Anda.');
+            }
+
+            // If existing user has null email_verified_at, mark as verified now since they logged in via Google
+            if (empty($user->email_verified_at)) {
+                $user->email_verified_at = now();
+                $user->save();
             }
 
             // Log in existing user
