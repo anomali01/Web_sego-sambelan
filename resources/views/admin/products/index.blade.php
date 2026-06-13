@@ -73,7 +73,8 @@ function toggleAvailability(productId, checkbox) {
         method: 'PATCH',
         headers: {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-            'Accept': 'application/json'
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
         }
     }).then(r => r.json()).then(data => {
         const label = checkbox.closest('td').querySelector('.toggle-label');

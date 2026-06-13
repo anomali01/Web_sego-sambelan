@@ -136,7 +136,7 @@ class ProductController extends Controller
     {
         $product->update(['is_available' => !$product->is_available]);
 
-        if (request()->ajax()) {
+        if (request()->ajax() || request()->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'is_available' => $product->is_available,

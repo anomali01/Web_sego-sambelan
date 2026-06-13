@@ -30,7 +30,7 @@ class StorePaymentSetting extends Model
             'bank_name' => 'BCA',
             'account_number' => '1234567890',
             'account_name' => 'Sego Sambelan',
-            'instructions' => 'Transfer sesuai total pesanan. Cantumkan nomor order di berita transfer.',
+            'instructions' => 'Transfer sesuai total pesanan. Upload bukti transfer setelah melakukan pembayaran.',
         ]);
     }
 

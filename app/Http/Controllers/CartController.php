@@ -25,7 +25,7 @@ class CartController extends Controller
     {
         // Jika belum login, arahkan ke halaman login
         if (!auth()->check()) {
-            if ($request->ajax()) {
+            if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => false,
                     'require_login' => true,
@@ -67,7 +67,7 @@ class CartController extends Controller
 
         session()->put('cart', $cart);
 
-        if ($request->ajax()) {
+        if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'message' => $product->name . ' ditambahkan ke keranjang!',
@@ -105,7 +105,7 @@ class CartController extends Controller
 
         session()->put('cart', $cart);
 
-        if ($request->ajax()) {
+        if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'cart' => $cart,
@@ -128,7 +128,7 @@ class CartController extends Controller
         unset($cart[$productId]);
         session()->put('cart', $cart);
 
-        if ($request->ajax()) {
+        if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'message' => 'Item dihapus dari keranjang.',
@@ -147,7 +147,7 @@ class CartController extends Controller
     {
         session()->forget('cart');
 
-        if (request()->ajax()) {
+        if (request()->ajax() || request()->wantsJson()) {
             return response()->json(['success' => true, 'message' => 'Keranjang dikosongkan.']);
         }
 
@@ -159,7 +159,7 @@ class CartController extends Controller
      */
     private function respondWithError(string $message)
     {
-        if (request()->ajax()) {
+        if (request()->ajax() || request()->wantsJson()) {
             return response()->json(['success' => false, 'message' => $message], 422);
         }
 

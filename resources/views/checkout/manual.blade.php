@@ -32,7 +32,6 @@
             @if($settings->instructions)
             <div class="alert alert-info" style="margin-bottom:1rem;">
                 <strong>Instruksi:</strong> {{ $settings->instructions }}
-                <br><small>Gunakan nomor order <strong>{{ $order->order_number }}</strong> sebagai berita transfer.</small>
             </div>
             @endif
 

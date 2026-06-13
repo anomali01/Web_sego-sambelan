@@ -81,7 +81,7 @@ class OrderController extends Controller
             }
         }
 
-        if ($request->ajax()) {
+        if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'message' => 'Status pesanan berhasil diperbarui!',

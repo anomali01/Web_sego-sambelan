@@ -45,6 +45,16 @@
                     💳 {{ $order->payment?->isManual() ? 'Transfer Manual' : 'Midtrans' }}: {{ ucfirst($order->payment?->payment_status ?? 'N/A') }}
                 </span>
 
+                @if($order->payment?->isManual())
+                    @if($order->payment->hasProof())
+                        <a href="{{ $order->payment->proof_url }}" target="_blank" rel="noopener" class="badge badge-success" style="display: inline-flex; align-items: center; gap: 0.25rem; text-decoration: none; padding: 0.35rem 0.6rem;">
+                            📸 Lihat Bukti ({{ $order->payment->sender_name }})
+                        </a>
+                    @else
+                        <span class="badge badge-danger" style="padding: 0.35rem 0.6rem;">⚠️ Belum Upload Bukti</span>
+                    @endif
+                @endif
+
                 <div class="action-buttons-group" style="display: flex; gap: 0.35rem; align-items: center;">
                     @if($order->status === 'pending')
                         @if($order->payment?->isManual())
