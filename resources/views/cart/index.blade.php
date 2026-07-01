@@ -9,9 +9,9 @@
     <div class="cart-layout">
         <div class="cart-items">
             @foreach($cart as $productId => $item)
-            <div class="cart-item glass-card" id="cart-item-{{ $productId }}">
+            <div class="cart-item card" id="cart-item-{{ $productId }}" style="padding: 1rem; border-radius: var(--radius-sm); margin-bottom: 1rem;">
                 <div class="cart-item-image">
-                    @if($item['image_url'])
+                    @if(!empty($item['image_url']))
                     <img src="{{ $item['image_url'] }}" alt="{{ $item['name'] }}">
                     @else
                     <div class="product-image-placeholder small">🍛</div>
@@ -40,7 +40,7 @@
             @endforeach
         </div>
 
-        <div class="cart-summary glass-card">
+        <div class="cart-summary card" style="padding: 1.5rem; border-radius: var(--radius);">
             <h2>Ringkasan Pesanan</h2>
             <div class="summary-row">
                 <span>Subtotal</span>

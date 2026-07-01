@@ -26,6 +26,7 @@ class PaymentSettingController extends Controller
             'account_number' => ['required', 'string', 'max:30'],
             'account_name' => ['required', 'string', 'max:100'],
             'instructions' => ['nullable', 'string', 'max:1000'],
+            'store_address' => ['required', 'string', 'max:500'],
             'qris_image' => ['nullable', 'image', 'max:2048'],
         ]);
 
@@ -35,6 +36,7 @@ class PaymentSettingController extends Controller
             'account_number' => $validated['account_number'],
             'account_name' => $validated['account_name'],
             'instructions' => $validated['instructions'] ?? null,
+            'store_address' => $validated['store_address'],
         ];
 
         if ($request->hasFile('qris_image')) {

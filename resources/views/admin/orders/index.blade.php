@@ -7,7 +7,8 @@
     <a href="/admin/orders" class="tab {{ !request('status') ? 'active' : '' }}">Semua ({{ $counts['all'] }})</a>
     <a href="/admin/orders?status=pending" class="tab {{ request('status') === 'pending' ? 'active' : '' }}">⏳ Pending ({{ $counts['pending'] }})</a>
     <a href="/admin/orders?status=processed" class="tab {{ request('status') === 'processed' ? 'active' : '' }}">👨‍🍳 Diproses ({{ $counts['processed'] }})</a>
-    <a href="/admin/orders?status=delivered" class="tab {{ request('status') === 'delivered' ? 'active' : '' }}">🚚 Dikirim ({{ $counts['delivered'] }})</a>
+    <a href="/admin/orders?status=delivering" class="tab {{ request('status') === 'delivering' ? 'active' : '' }}">🛵 Diantar ({{ $counts['delivering'] }})</a>
+    <a href="/admin/orders?status=delivered" class="tab {{ request('status') === 'delivered' ? 'active' : '' }}">🚚 Sampai ({{ $counts['delivered'] }})</a>
     <a href="/admin/orders?status=completed" class="tab {{ request('status') === 'completed' ? 'active' : '' }}">✅ Riwayat Pesanan ({{ $counts['completed'] }})</a>
     <a href="/admin/orders?status=canceled" class="tab {{ request('status') === 'canceled' ? 'active' : '' }}">❌ Riwayat Pembatalan ({{ $counts['canceled'] }})</a>
 </div>
@@ -89,11 +90,20 @@
 
                     @elseif($order->status === 'processed')
                         @if($order->isDelivery())
-                            <form action="/admin/orders/{{ $order->id }}/status" method="POST" class="inline" onsubmit="return confirm('Kirim pesanan ini?')">
-                                @csrf @method('PATCH')
-                                <input type="hidden" name="status" value="delivered">
-                                <button type="submit" class="btn btn-sm btn-info">🚚 Kirim Pesanan</button>
-                            </form>
+                            @if($order->driver_id)
+                                <span class="badge badge-info">Driver: {{ $order->driver->name }}</span>
+                            @else
+                                <form action="/admin/orders/{{ $order->id }}/assign-driver" method="POST" class="inline" style="display: flex; gap: 0.25rem;">
+                                    @csrf
+                                    <select name="driver_id" class="form-control" style="padding: 0.2rem 0.5rem; font-size: 0.85rem; min-width: 120px;" required>
+                                        <option value="" disabled selected>Pilih Driver</option>
+                                        @foreach($drivers as $driver)
+                                            <option value="{{ $driver->id }}">{{ $driver->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    <button type="submit" class="btn btn-sm btn-primary">🛵 Tugaskan</button>
+                                </form>
+                            @endif
                         @else
                             <form action="/admin/orders/{{ $order->id }}/status" method="POST" class="inline" onsubmit="return confirm('Sajikan pesanan dan selesaikan transaksi?')">
                                 @csrf @method('PATCH')
@@ -108,11 +118,18 @@
                             <button type="submit" class="btn btn-sm btn-danger">❌ Batalkan</button>
                         </form>
 
+                    @elseif($order->status === 'delivering')
+                        <span class="badge badge-primary">🛵 Sedang Diantar ({{ $order->driver->name ?? 'Driver' }})</span>
                     @elseif($order->status === 'delivered')
-                        <form action="/admin/orders/{{ $order->id }}/status" method="POST" class="inline" onsubmit="return confirm('Tandai pesanan ini sudah selesai diterima?')">
+                        @if($order->delivery_proof_url)
+                            <a href="{{ $order->delivery_proof_url }}" target="_blank" rel="noopener" class="badge badge-success" style="display: inline-flex; align-items: center; gap: 0.25rem; text-decoration: none; padding: 0.35rem 0.6rem;">
+                                📸 Bukti Pengantaran
+                            </a>
+                        @endif
+                        <form action="/admin/orders/{{ $order->id }}/status" method="POST" class="inline" onsubmit="return confirm('Verifikasi bukti pengantaran dan selesaikan pesanan?')">
                             @csrf @method('PATCH')
                             <input type="hidden" name="status" value="completed">
-                            <button type="submit" class="btn btn-sm btn-success">✅ Selesai Diterima</button>
+                            <button type="submit" class="btn btn-sm btn-success">✅ Verifikasi & Selesai</button>
                         </form>
 
                         <form action="/admin/orders/{{ $order->id }}/status" method="POST" class="inline" onsubmit="return confirm('Batalkan pesanan ini?')">

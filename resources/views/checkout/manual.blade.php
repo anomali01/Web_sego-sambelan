@@ -56,6 +56,13 @@
             </form>
 
             <a href="/orders/{{ $order->id }}/tracking" class="btn btn-outline btn-full" style="margin-top:.75rem;">Lihat Status Pesanan</a>
+
+            <form method="POST" action="/checkout/{{ $order->id }}/cancel" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan pesanan ini?\nItem akan dikembalikan ke keranjang Anda.')" style="margin-top: 0.5rem;">
+                @csrf
+                <button type="submit" class="btn btn-full" style="background: none; color: #EF4444; border: 1px solid #FCA5A5; font-weight: 600;">
+                    ✕ Batalkan Pesanan & Kembali ke Keranjang
+                </button>
+            </form>
         </div>
     </div>
 </div>

@@ -14,6 +14,7 @@ class Order extends Model
 
     protected $fillable = [
         'user_id',
+        'driver_id',
         'order_number',
         'order_type',
         'table_number',
@@ -21,6 +22,7 @@ class Order extends Model
         'status',
         'delivery_address',
         'notes',
+        'delivery_proof',
     ];
 
     protected function casts(): array
@@ -37,6 +39,11 @@ class Order extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function driver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'driver_id');
+    }
+
     public function orderItems(): HasMany
     {
         return $this->hasMany(OrderItem::class);
@@ -48,6 +55,14 @@ class Order extends Model
     }
 
     // ── Helpers ────────────────────────────────────
+
+    public function getDeliveryProofUrlAttribute(): ?string
+    {
+        if ($this->delivery_proof) {
+            return asset('storage/' . $this->delivery_proof);
+        }
+        return null;
+    }
 
     public function getFormattedTotalAttribute(): string
     {
@@ -69,7 +84,8 @@ class Order extends Model
         return match ($this->status) {
             'pending' => 'badge-warning',
             'processed' => 'badge-info',
-            'delivered' => 'badge-primary',
+            'delivering' => 'badge-primary',
+            'delivered' => 'badge-success',
             'completed' => 'badge-success',
             'canceled' => 'badge-danger',
             default => 'badge-secondary',

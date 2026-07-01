@@ -27,9 +27,10 @@ class CheckoutController extends Controller
 
         $total = collect($cart)->sum('subtotal');
         $profile = $request->user()->profile;
+        $addresses = $request->user()->addresses()->orderBy('is_primary', 'desc')->orderBy('created_at', 'desc')->get();
         $paymentSettings = StorePaymentSetting::current();
 
-        return view('checkout.index', compact('cart', 'total', 'profile', 'paymentSettings'));
+        return view('checkout.index', compact('cart', 'total', 'profile', 'addresses', 'paymentSettings'));
     }
 
     /**
@@ -45,6 +46,7 @@ class CheckoutController extends Controller
 
         $validated = $request->validate([
             'order_type' => ['required', 'in:delivery,dine_in'],
+            'address_id' => ['required_if:order_type,delivery', 'nullable', 'exists:user_addresses,id'],
             'table_number' => ['required_if:order_type,dine_in', 'nullable', 'string', 'max:10'],
             'notes' => ['nullable', 'string', 'max:500'],
             'payment_channel' => ['required', 'in:midtrans,manual'],
@@ -167,6 +169,18 @@ class CheckoutController extends Controller
     private function createOrderFromCart(array $cart, array $validated, Request $request): Order
     {
         $user = $request->user();
+        $deliveryAddressString = null;
+        if ($validated['order_type'] === 'delivery') {
+            $userAddress = \App\Models\UserAddress::where('user_id', $user->id)
+                ->where('id', $validated['address_id'])
+                ->first();
+            if ($userAddress) {
+                $deliveryAddressString = $userAddress->full_address;
+            } else {
+                throw new \Exception("Alamat pengiriman tidak valid.");
+            }
+        }
+
         $totalPrice = 0;
 
         $order = Order::create([
@@ -176,9 +190,7 @@ class CheckoutController extends Controller
             'table_number' => $validated['table_number'] ?? null,
             'total_price' => 0,
             'status' => 'pending',
-            'delivery_address' => $validated['order_type'] === 'delivery'
-                ? $user->profile->full_address
-                : null,
+            'delivery_address' => $deliveryAddressString,
             'notes' => $validated['notes'] ?? null,
         ]);
 
@@ -210,5 +222,76 @@ class CheckoutController extends Controller
         ]);
 
         return $order->fresh(['payment']);
+    }
+
+    /**
+     * Store new address via AJAX
+     */
+    public function storeAddress(Request $request)
+    {
+        $validated = $request->validate([
+            'label' => ['required', 'string', 'max:50'],
+            'full_address' => ['required', 'string', 'max:500'],
+            'latitude' => ['nullable', 'numeric'],
+            'longitude' => ['nullable', 'numeric'],
+        ]);
+
+        // If it's the first address, make it primary
+        $isPrimary = $request->user()->addresses()->count() === 0;
+
+        $address = $request->user()->addresses()->create([
+            'label' => $validated['label'],
+            'full_address' => $validated['full_address'],
+            'latitude' => $validated['latitude'] ?? null,
+            'longitude' => $validated['longitude'] ?? null,
+            'is_primary' => $isPrimary,
+        ]);
+
+        return response()->json(['success' => true, 'address' => $address]);
+    }
+
+    /**
+     * Cancel a pending order: restore stock, restore cart, delete order.
+     */
+    public function cancelOrder(Order $order, Request $request)
+    {
+        if ($order->user_id !== $request->user()->id) {
+            abort(403);
+        }
+
+        // Only allow cancellation of pending orders that haven't been paid
+        if ($order->status !== 'pending' || ($order->payment && $order->payment->isPaid())) {
+            return redirect("/orders/{$order->id}/tracking")
+                ->with('error', 'Pesanan ini tidak dapat dibatalkan karena sudah diproses.');
+        }
+
+        $order->load('orderItems.product');
+
+        // Restore cart from order items
+        $cart = [];
+        foreach ($order->orderItems as $item) {
+            // Restore stock
+            $item->product->increment('stock', $item->quantity);
+
+            // Rebuild cart session
+            $cart[$item->product_id] = [
+                'name' => $item->product->name,
+                'price' => $item->unit_price,
+                'quantity' => $item->quantity,
+                'subtotal' => $item->subtotal,
+                'image_url' => $item->product->image_url ?? null,
+            ];
+        }
+
+        session()->put('cart', $cart);
+
+        // Delete payment and order
+        if ($order->payment) {
+            $order->payment->delete();
+        }
+        $order->orderItems()->delete();
+        $order->delete();
+
+        return redirect('/cart')->with('info', 'Pesanan dibatalkan. Item sudah dikembalikan ke keranjang Anda.');
     }
 }

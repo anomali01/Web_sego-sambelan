@@ -12,6 +12,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'profile.complete' => \App\Http\Middleware\EnsureProfileIsComplete::class,
             'role.seller' => \App\Http\Middleware\EnsureUserIsSeller::class,
+            'role.driver' => \App\Http\Middleware\IsDriver::class,
         ]);
 
         $middleware->validateCsrfTokens(except: [

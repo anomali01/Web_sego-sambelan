@@ -38,6 +38,10 @@
                     @endif
                 </a>
                 @endif
+
+                @if(auth()->user()->isDriver())
+                <a href="{{ route('driver.orders.index') }}" class="nav-link {{ request()->is('driver/orders*') ? 'active' : '' }}">🛵 Tugas Saya</a>
+                @endif
                 <div class="nav-user">
                     <span class="nav-user-name">{{ auth()->user()->name }}</span>
                     <form action="/logout" method="POST" class="inline">

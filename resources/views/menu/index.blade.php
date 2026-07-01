@@ -21,9 +21,11 @@
 @endguest
 
 <div class="container py-2">
-    <div class="menu-hero">
-        <h1>Menu Sego Sambelan 🔥</h1>
-        <p>Pilih menu favoritmu dan pesan sekarang!</p>
+    <div class="menu-hero" style="text-align: left; display: flex; flex-direction: column; align-items: flex-start; padding: 2rem;">
+        <span style="background: rgba(255,255,255,0.2); padding: 0.2rem 0.6rem; border-radius: var(--radius-sm); font-size: 0.8rem; margin-bottom: 1rem;">Penawaran Spesial</span>
+        <h1 style="font-size: 1.6rem; line-height: 1.3; margin-bottom: 0.5rem; text-shadow: none;">Promo Spesial Jum'at<br>Berkah: Diskon 20%!</h1>
+        <p style="font-size: 0.9rem; margin-bottom: 1.5rem; text-shadow: none;">Untuk semua menu paket sego sambel favoritmu.</p>
+        <button class="btn btn-sm" style="background: white; color: var(--secondary); font-weight: 700; border-radius: var(--radius-full); padding: 0.5rem 1rem;">Pesan Sekarang</button>
     </div>
 
     {{-- Category Tabs --}}
@@ -51,18 +53,19 @@
             </div>
             <div class="product-info">
                 <h3 class="product-name">{{ $product->name }}</h3>
-                <p class="product-desc">{{ Str::limit($product->description, 60) }}</p>
+                <p class="product-desc">{{ Str::limit($product->description, 50) }}</p>
                 <div class="product-footer">
                     <span class="product-price">{{ $product->formatted_price }}</span>
                     @if($product->isInStock())
-                    <button class="btn btn-primary btn-sm btn-add-cart"
+                    <button class="btn-add-circle"
                             onclick="addToCart({{ $product->id }}, this)"
                             data-product-id="{{ $product->id }}"
-                            data-requires-auth="{{ auth()->check() ? 'false' : 'true' }}">
-                        🛒 Pesan
+                            data-requires-auth="{{ auth()->check() ? 'false' : 'true' }}"
+                            title="Tambah ke Keranjang">
+                        +
                     </button>
                     @else
-                    <span class="badge badge-danger">Habis</span>
+                    <span class="badge badge-danger" style="font-size: 0.7rem;">Habis</span>
                     @endif
                 </div>
             </div>

@@ -57,9 +57,11 @@ Route::middleware(['auth', 'profile.complete'])->group(function () {
     // Checkout
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
     Route::post('/checkout/place-order', [CheckoutController::class, 'placeOrder'])->name('checkout.place');
+    Route::post('/checkout/address', [CheckoutController::class, 'storeAddress'])->name('checkout.address.store');
     Route::get('/checkout/payment/{order}', [CheckoutController::class, 'showPayment'])->name('checkout.payment');
     Route::get('/checkout/manual/{order}', [CheckoutController::class, 'showManualPayment'])->name('checkout.manual');
     Route::post('/checkout/manual/{order}/proof', [CheckoutController::class, 'uploadProof'])->name('checkout.manual.proof');
+    Route::post('/checkout/{order}/cancel', [CheckoutController::class, 'cancelOrder'])->name('checkout.cancel');
 
     // Order Tracking
     Route::get('/orders/history', [OrderTrackingController::class, 'history'])->name('orders.history');
@@ -85,7 +87,15 @@ Route::middleware(['auth', 'role.seller'])->prefix('admin')->name('admin.')->gro
     Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
     Route::post('/orders/{order}/confirm-payment', [OrderController::class, 'confirmPayment'])->name('orders.confirm-payment');
     Route::post('/orders/{order}/start-processing', [OrderController::class, 'startProcessing'])->name('orders.start-processing');
+    Route::post('/orders/{order}/assign-driver', [OrderController::class, 'assignDriver'])->name('orders.assign-driver');
 
     Route::get('/payment-settings', [PaymentSettingController::class, 'edit'])->name('payment-settings.edit');
     Route::put('/payment-settings', [PaymentSettingController::class, 'update'])->name('payment-settings.update');
+});
+
+// ─── Driver Dashboard ───────────────────────────────────
+Route::middleware(['auth', 'role.driver'])->prefix('driver')->name('driver.')->group(function () {
+    Route::get('/orders', [\App\Http\Controllers\Driver\OrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/{order}', [\App\Http\Controllers\Driver\OrderController::class, 'show'])->name('orders.show');
+    Route::patch('/orders/{order}/status', [\App\Http\Controllers\Driver\OrderController::class, 'updateStatus'])->name('orders.status');
 });

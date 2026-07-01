@@ -32,12 +32,15 @@ class OrderController extends Controller
             'all' => Order::count(),
             'pending' => Order::where('status', 'pending')->count(),
             'processed' => Order::where('status', 'processed')->count(),
+            'delivering' => Order::where('status', 'delivering')->count(),
             'delivered' => Order::where('status', 'delivered')->count(),
             'completed' => Order::where('status', 'completed')->count(),
             'canceled' => Order::where('status', 'canceled')->count(),
         ];
 
-        return view('admin.orders.index', compact('orders', 'counts'));
+        $drivers = \App\Models\User::where('role', 'driver')->get();
+
+        return view('admin.orders.index', compact('orders', 'counts', 'drivers'));
     }
 
     /**
@@ -45,9 +48,11 @@ class OrderController extends Controller
      */
     public function show(Order $order)
     {
-        $order->load(['user.profile', 'orderItems.product', 'payment']);
+        $order->load(['user.profile', 'orderItems.product', 'payment', 'driver']);
 
-        return view('admin.orders.show', compact('order'));
+        $drivers = \App\Models\User::where('role', 'driver')->get();
+
+        return view('admin.orders.show', compact('order', 'drivers'));
     }
 
     /**
@@ -56,7 +61,7 @@ class OrderController extends Controller
     public function updateStatus(Request $request, Order $order)
     {
         $validated = $request->validate([
-            'status' => ['required', 'in:pending,processed,delivered,completed,canceled'],
+            'status' => ['required', 'in:pending,processed,delivering,delivered,completed,canceled'],
         ]);
 
         $order->load('payment');
@@ -64,7 +69,7 @@ class OrderController extends Controller
 
         if ($order->payment?->isManual()
             && ! $order->payment->isPaid()
-            && in_array($newStatus, ['processed', 'delivered', 'completed'], true)) {
+            && in_array($newStatus, ['processed', 'delivering', 'delivered', 'completed'], true)) {
             return back()->with(
                 'error',
                 'Pembayaran transfer manual belum dikonfirmasi. Verifikasi pembayaran terlebih dahulu.'
@@ -89,6 +94,28 @@ class OrderController extends Controller
         }
 
         return back()->with('success', 'Status pesanan berhasil diperbarui!');
+    }
+
+    /**
+     * Assign driver to order.
+     */
+    public function assignDriver(Request $request, Order $order)
+    {
+        $request->validate([
+            'driver_id' => ['required', 'exists:users,id'],
+        ]);
+
+        $driver = \App\Models\User::find($request->driver_id);
+        if (! $driver->isDriver()) {
+            return back()->with('error', 'User yang dipilih bukan driver.');
+        }
+
+        $order->update([
+            'driver_id' => $driver->id,
+            'status' => 'delivering',
+        ]);
+
+        return back()->with('success', 'Driver ' . $driver->name . ' berhasil ditugaskan untuk pesanan ini.');
     }
 
     /**

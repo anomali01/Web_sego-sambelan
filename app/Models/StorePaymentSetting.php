@@ -14,6 +14,7 @@ class StorePaymentSetting extends Model
         'account_name',
         'qris_image',
         'instructions',
+        'store_address',
     ];
 
     protected function casts(): array
@@ -31,6 +32,7 @@ class StorePaymentSetting extends Model
             'account_number' => '1234567890',
             'account_name' => 'Sego Sambelan',
             'instructions' => 'Transfer sesuai total pesanan. Upload bukti transfer setelah melakukan pembayaran.',
+            'store_address' => 'Jl. Mawar No. 123, Kota XYZ',
         ]);
     }
 

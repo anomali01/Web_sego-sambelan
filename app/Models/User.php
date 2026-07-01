@@ -40,6 +40,11 @@ class User extends Authenticatable
         return $this->hasOne(Profile::class);
     }
 
+    public function addresses(): HasMany
+    {
+        return $this->hasMany(UserAddress::class);
+    }
+
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
@@ -60,6 +65,16 @@ class User extends Authenticatable
     public function isBuyer(): bool
     {
         return $this->role === 'buyer';
+    }
+
+    public function isDriver(): bool
+    {
+        return $this->role === 'driver';
+    }
+
+    public function assignedOrders(): HasMany
+    {
+        return $this->hasMany(Order::class, 'driver_id');
     }
 
     public function hasCompleteProfile(): bool

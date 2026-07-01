@@ -92,11 +92,23 @@
 
             @elseif($order->status === 'processed')
                 @if($order->isDelivery())
-                    <form action="/admin/orders/{{ $order->id }}/status" method="POST" class="inline" onsubmit="return confirm('Kirim pesanan ini sekarang?')">
-                        @csrf @method('PATCH')
-                        <input type="hidden" name="status" value="delivered">
-                        <button type="submit" class="btn btn-info">🚚 Kirim/Antar Pesanan</button>
-                    </form>
+                    @if($order->driver_id)
+                        <div style="background: #EBF5FF; padding: 0.75rem; border-radius: var(--radius-sm); border-left: 4px solid #3B82F6; margin-bottom: 0.5rem; width: 100%;">
+                            <p style="margin: 0; color: #1E40AF;"><strong>Driver Ditugaskan:</strong> {{ $order->driver->name }}</p>
+                        </div>
+                    @else
+                        <form action="/admin/orders/{{ $order->id }}/assign-driver" method="POST" class="inline" style="background: var(--bg-color); padding: 0.75rem; border-radius: var(--radius-sm); width: 100%; display: flex; gap: 0.5rem; align-items: center; border: 1px solid var(--border);">
+                            @csrf
+                            <label for="driver_id" style="font-weight: 600; white-space: nowrap;">Tugaskan Driver:</label>
+                            <select name="driver_id" id="driver_id" class="form-control" required style="flex-grow: 1; min-width: 150px;">
+                                <option value="" disabled selected>Pilih Driver</option>
+                                @foreach($drivers as $driver)
+                                    <option value="{{ $driver->id }}">{{ $driver->name }}</option>
+                                @endforeach
+                            </select>
+                            <button type="submit" class="btn btn-primary" style="white-space: nowrap;">🛵 Tugaskan</button>
+                        </form>
+                    @endif
                 @else
                     <form action="/admin/orders/{{ $order->id }}/status" method="POST" class="inline" onsubmit="return confirm('Sajikan pesanan dan selesaikan transaksi?')">
                         @csrf @method('PATCH')
@@ -111,18 +123,37 @@
                     <button type="submit" class="btn btn-danger">❌ Batalkan Pesanan</button>
                 </form>
 
+            @elseif($order->status === 'delivering')
+                <div class="alert alert-info" style="margin:0; width:100%;">
+                    🛵 Pesanan sedang dalam perjalanan diantar oleh <strong>{{ $order->driver->name ?? 'Driver' }}</strong>.
+                </div>
             @elseif($order->status === 'delivered')
-                <form action="/admin/orders/{{ $order->id }}/status" method="POST" class="inline" onsubmit="return confirm('Tandai pesanan ini sudah selesai diterima?')">
-                    @csrf @method('PATCH')
-                    <input type="hidden" name="status" value="completed">
-                    <button type="submit" class="btn btn-success">✅ Selesai Diterima</button>
-                </form>
+                <div style="width: 100%; margin-bottom: 1rem;">
+                    @if($order->delivery_proof_url)
+                    <div style="margin-bottom: 1rem; padding: 1rem; background: var(--bg-color); border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                        <p style="font-weight: 600; margin-bottom: 0.5rem;">📸 Bukti Pengantaran Driver</p>
+                        <a href="{{ $order->delivery_proof_url }}" target="_blank" rel="noopener">
+                            <img src="{{ $order->delivery_proof_url }}" alt="Bukti" style="max-width: 250px; border-radius: 8px; border: 1px solid var(--border);">
+                        </a>
+                    </div>
+                    @else
+                    <div class="alert alert-warning" style="margin-bottom: 1rem;">
+                        Driver menandai sudah sampai, tapi belum ada foto bukti.
+                    </div>
+                    @endif
 
-                <form action="/admin/orders/{{ $order->id }}/status" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan pesanan ini?')">
-                    @csrf @method('PATCH')
-                    <input type="hidden" name="status" value="canceled">
-                    <button type="submit" class="btn btn-danger">❌ Batalkan Pesanan</button>
-                </form>
+                    <form action="/admin/orders/{{ $order->id }}/status" method="POST" class="inline" onsubmit="return confirm('Verifikasi bukti pengantaran dan selesaikan pesanan?')">
+                        @csrf @method('PATCH')
+                        <input type="hidden" name="status" value="completed">
+                        <button type="submit" class="btn btn-success">✅ Verifikasi & Selesai</button>
+                    </form>
+
+                    <form action="/admin/orders/{{ $order->id }}/status" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan pesanan ini?')">
+                        @csrf @method('PATCH')
+                        <input type="hidden" name="status" value="canceled">
+                        <button type="submit" class="btn btn-danger">❌ Batalkan Pesanan</button>
+                    </form>
+                </div>
 
             @elseif($order->status === 'completed')
                 <div class="alert alert-success" style="margin:0; width:100%; display:flex; align-items:center; gap:0.5rem;">
