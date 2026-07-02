@@ -18,7 +18,7 @@
                     0 => ['icon' => '⏳', 'text' => 'Menunggu pembayaran...'],
                     1 => ['icon' => '💳', 'text' => 'Pembayaran diterima!'],
                     2 => ['icon' => '👨‍🍳', 'text' => 'Sego Sambelan sedang disiapkan! 🔥'],
-                    3 => $order->isDelivery() ? ['icon' => '🚚', 'text' => 'Pesanan dalam perjalanan!'] : ['icon' => '🍽️', 'text' => 'Pesanan siap diambil!'],
+                    3 => $order->isDelivery() ? ['icon' => '🚚', 'text' => 'Pesanan sedang dalam perjalanan!'] : ['icon' => '🍽️', 'text' => 'Pesanan siap diambil!'],
                 ];
                 if ($order->payment?->isManual() && $order->payment->isPaid() && $order->status === 'pending') {
                     $messages[1] = ['icon' => '✅', 'text' => 'Pembayaran dikonfirmasi — menunggu mulai dimasak'];
@@ -200,6 +200,10 @@
                 let msg = 'Status pesanan Anda telah diperbarui!';
                 if (currentState.status === 'processing') {
                     msg = 'Pesanan Anda sedang disiapkan di dapur! 🔥 Harap ditunggu.';
+                } else if (currentState.status === 'delivering') {
+                    msg = 'Pesanan Anda sedang dalam perjalanan ke lokasi Anda! 🚚';
+                } else if (currentState.status === 'delivered') {
+                    msg = 'Pesanan Anda sudah sampai! Menunggu verifikasi admin. 📦';
                 } else if (currentState.status === 'shipping') {
                     msg = 'Pesanan Anda sedang dalam perjalanan ke lokasi Anda! 🚚';
                 } else if (currentState.status === 'completed') {

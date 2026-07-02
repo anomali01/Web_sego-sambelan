@@ -67,4 +67,23 @@ class OrderController extends Controller
         return redirect()->route('driver.orders.show', $order->id)
             ->with('success', $message);
     }
+
+    /**
+     * Lightweight polling endpoint for smart auto-refresh.
+     */
+    public function poll()
+    {
+        $latestOrder = Order::where('driver_id', Auth::id())
+            ->latest('updated_at')
+            ->first();
+
+        $activeCount = Order::where('driver_id', Auth::id())
+            ->whereIn('status', ['processed', 'delivering'])
+            ->count();
+
+        return response()->json([
+            'latest_at' => $latestOrder?->updated_at?->timestamp ?? 0,
+            'active' => $activeCount,
+        ]);
+    }
 }

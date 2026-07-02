@@ -170,12 +170,17 @@ class CheckoutController extends Controller
     {
         $user = $request->user();
         $deliveryAddressString = null;
+        $deliveryLatitude = null;
+        $deliveryLongitude = null;
+
         if ($validated['order_type'] === 'delivery') {
             $userAddress = \App\Models\UserAddress::where('user_id', $user->id)
                 ->where('id', $validated['address_id'])
                 ->first();
             if ($userAddress) {
                 $deliveryAddressString = $userAddress->full_address;
+                $deliveryLatitude = $userAddress->latitude;
+                $deliveryLongitude = $userAddress->longitude;
             } else {
                 throw new \Exception("Alamat pengiriman tidak valid.");
             }
@@ -191,6 +196,8 @@ class CheckoutController extends Controller
             'total_price' => 0,
             'status' => 'pending',
             'delivery_address' => $deliveryAddressString,
+            'delivery_latitude' => $deliveryLatitude,
+            'delivery_longitude' => $deliveryLongitude,
             'notes' => $validated['notes'] ?? null,
         ]);
 

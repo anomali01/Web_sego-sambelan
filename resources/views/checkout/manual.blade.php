@@ -6,7 +6,7 @@
     <div class="payment-page">
         <div class="payment-card glass-card">
             <div class="payment-header">
-                <span class="payment-icon">🏦</span>
+                <img src="{{ asset('images/icons/icon_bank.svg') }}" alt="Bank" style="height: 48px; width: 48px; object-fit: contain; margin-bottom: 0.5rem;">
                 <h1>Transfer ke Rekening Warung</h1>
                 <p>Order: <strong>{{ $order->order_number }}</strong></p>
             </div>

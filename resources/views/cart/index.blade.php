@@ -3,7 +3,9 @@
 
 @section('content')
 <div class="container py-2">
-    <h1 class="page-title">🛒 Keranjang Belanja</h1>
+    <h1 class="page-title" style="display: flex; align-items: center; gap: 10px;">
+        <img src="{{ asset('images/icons/icon_cart.svg') }}" alt="Cart" style="height: 32px; width: 32px; object-fit: contain;"> Keranjang Belanja
+    </h1>
 
     @if(count($cart) > 0)
     <div class="cart-layout">
@@ -57,7 +59,9 @@
     </div>
     @else
     <div class="empty-state">
-        <span class="empty-icon">🛒</span>
+        <div style="margin-bottom: 1rem;">
+            <img src="{{ asset('images/icons/icon_cart.svg') }}" alt="Cart" style="height: 64px; width: 64px; object-fit: contain; opacity: 0.8;">
+        </div>
         <h2>Keranjang Anda kosong</h2>
         <p>Yuk, mulai pilih menu favoritmu!</p>
         <a href="/menu" class="btn btn-primary">Lihat Menu</a>

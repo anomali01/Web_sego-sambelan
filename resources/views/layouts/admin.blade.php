@@ -14,19 +14,19 @@
     <div class="admin-wrapper">
         {{-- Sidebar --}}
         <aside class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <span class="brand-icon">🔥</span>
+            <div class="sidebar-header" style="display: flex; align-items: center; gap: 8px;">
+                <img src="{{ asset('images/icons/logo_utama.png') }}" alt="Sego Sambelan" style="height: 38px; width: auto; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(234, 88, 12, 0.2));">
                 <span class="brand-text">Sego Sambelan</span>
             </div>
             <nav class="sidebar-nav">
                 <a href="/admin/dashboard" class="sidebar-link {{ request()->is('admin/dashboard') ? 'active' : '' }}">
                     <span class="sidebar-icon">📊</span> Dashboard
                 </a>
-                <a href="/admin/products" class="sidebar-link {{ request()->is('admin/products*') ? 'active' : '' }}">
-                    <span class="sidebar-icon">🍽️</span> Menu
+                <a href="/admin/products" class="sidebar-link {{ request()->is('admin/products*') ? 'active' : '' }}" style="display: flex; align-items: center; gap: 10px;">
+                    <img src="{{ asset('images/icons/icon_semua.png') }}" alt="Menu" style="height: 20px; width: 20px; object-fit: contain; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1));"> Menu
                 </a>
-                <a href="/admin/payment-settings" class="sidebar-link {{ request()->is('admin/payment-settings*') ? 'active' : '' }}">
-                    <span class="sidebar-icon">🏦</span> Pembayaran Manual
+                <a href="/admin/payment-settings" class="sidebar-link {{ request()->is('admin/payment-settings*') ? 'active' : '' }}" style="display: flex; align-items: center; gap: 10px;">
+                    <img src="{{ asset('images/icons/icon_bank.svg') }}" alt="Bank" style="height: 18px; width: 18px; object-fit: contain;"> Pembayaran Manual
                 </a>
                 <a href="/admin/orders" class="sidebar-link {{ request()->is('admin/orders*') ? 'active' : '' }}">
                     <span class="sidebar-icon">📦</span> Pesanan
@@ -74,6 +74,7 @@
     </div>
 
     <script src="{{ asset('js/app.js') }}"></script>
+    <script src="{{ asset('js/smart-refresh.js') }}"></script>
     @stack('scripts')
 </body>
 </html>

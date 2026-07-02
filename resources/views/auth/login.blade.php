@@ -5,7 +5,7 @@
 <div class="auth-page">
     <div class="auth-card glass-card">
         <div class="auth-header">
-            <span class="auth-logo">🔥</span>
+            <img src="{{ asset('images/icons/logo_utama.png') }}" alt="Sego Sambelan Logo" style="height: 70px; width: auto; object-fit: contain; margin-bottom: 0.5rem; filter: drop-shadow(0 6px 12px rgba(234, 88, 12, 0.25));">
             <h1>Selamat Datang</h1>
             <p>Masuk ke akun Sego Sambelan Anda</p>
         </div>

@@ -73,4 +73,25 @@ class DashboardController extends Controller
 
         return view('admin.dashboard', compact('stats', 'recentOrders', 'cashInflows'));
     }
+
+    /**
+     * Lightweight polling endpoint for smart auto-refresh.
+     * Returns detailed order state so frontend can detect and describe changes.
+     */
+    public function poll()
+    {
+        $latestOrder = Order::latest('updated_at')->first();
+        $latestNew = Order::latest('created_at')->first();
+
+        return response()->json([
+            'latest_at'  => $latestOrder?->updated_at?->timestamp ?? 0,
+            'newest_at'  => $latestNew?->created_at?->timestamp ?? 0,
+            'newest_num' => $latestNew?->order_number ?? '',
+            'total'      => Order::count(),
+            'pending'    => Order::where('status', 'pending')->count(),
+            'processed'  => Order::where('status', 'processed')->count(),
+            'delivering' => Order::where('status', 'delivering')->count(),
+            'delivered'  => Order::where('status', 'delivered')->count(),
+        ]);
+    }
 }

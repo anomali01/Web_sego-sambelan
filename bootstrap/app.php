@@ -9,10 +9,15 @@ return Application::configure(basePath: dirname(__DIR__))
         web: __DIR__.'/../routes/web.php',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->web(append: [
+            \App\Http\Middleware\NoCacheHeaders::class,
+        ]);
+
         $middleware->alias([
             'profile.complete' => \App\Http\Middleware\EnsureProfileIsComplete::class,
             'role.seller' => \App\Http\Middleware\EnsureUserIsSeller::class,
             'role.driver' => \App\Http\Middleware\IsDriver::class,
+            'role.buyer' => \App\Http\Middleware\RedirectIfNotBuyer::class,
         ]);
 
         $middleware->validateCsrfTokens(except: [

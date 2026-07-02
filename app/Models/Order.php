@@ -21,6 +21,8 @@ class Order extends Model
         'total_price',
         'status',
         'delivery_address',
+        'delivery_latitude',
+        'delivery_longitude',
         'notes',
         'delivery_proof',
     ];

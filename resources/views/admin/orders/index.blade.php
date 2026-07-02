@@ -156,6 +156,9 @@
 </div>
 {{ $orders->appends(request()->query())->links() }}
 
-{{-- Auto refresh --}}
-<script>setTimeout(() => location.reload(), 30000);</script>
+@push('scripts')
+<script>
+    SmartRefresh.init({ pollUrl: '/admin/poll', interval: 10 });
+</script>
+@endpush
 @endsection

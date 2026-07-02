@@ -217,4 +217,10 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+    SmartRefresh.init({ pollUrl: '/admin/poll', interval: 10 });
+</script>
+@endpush
 @endsection

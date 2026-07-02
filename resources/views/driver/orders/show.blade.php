@@ -30,10 +30,18 @@
 
         <div style="margin-bottom: 2rem;">
             <!-- Maps Link using Google Maps App/Web -->
-            <a href="https://maps.google.com/?q={{ urlencode($order->delivery_address) }}" target="_blank" class="btn btn-primary btn-full btn-lg" style="background-color: #3B82F6; border-color: #3B82F6;">
-                🗺️ Buka Navigasi Google Maps
-            </a>
-            <p style="text-align: center; font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">Akan membuka aplikasi Google Maps</p>
+            @if($order->delivery_latitude && $order->delivery_longitude)
+                {{-- Gunakan koordinat yang tepat untuk navigasi --}}
+                <a href="https://www.google.com/maps/dir/?api=1&destination={{ $order->delivery_latitude }},{{ $order->delivery_longitude }}" target="_blank" class="btn btn-primary btn-full btn-lg" style="background-color: #3B82F6; border-color: #3B82F6;">
+                    🗺️ Buka Navigasi Google Maps
+                </a>
+            @else
+                {{-- Fallback: gunakan alamat teks --}}
+                <a href="https://www.google.com/maps/dir/?api=1&destination={{ urlencode($order->delivery_address) }}" target="_blank" class="btn btn-primary btn-full btn-lg" style="background-color: #3B82F6; border-color: #3B82F6;">
+                    🗺️ Buka Navigasi Google Maps
+                </a>
+            @endif
+            <p style="text-align: center; font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">Akan membuka aplikasi Google Maps dengan mode navigasi</p>
         </div>
 
         <h3 style="font-size: 1rem; margin-bottom: 0.75rem;">Ubah Status Pesanan</h3>
@@ -94,4 +102,12 @@
         </ul>
     </div>
 </div>
+
+@if(!in_array($order->status, ['completed', 'canceled']))
+@push('scripts')
+<script>
+    SmartRefresh.init({ pollUrl: '/driver/poll', interval: 10 });
+</script>
+@endpush
+@endif
 @endsection

@@ -27,7 +27,7 @@ class OrderTrackingController extends Controller
         ];
 
         if ($order->isDelivery()) {
-            $statusSteps[] = ['key' => 'delivered', 'label' => 'Dalam Pengiriman', 'icon' => '🚚'];
+            $statusSteps[] = ['key' => 'delivering', 'label' => 'Dalam Pengiriman', 'icon' => '🚚'];
         }
 
         $statusSteps[] = ['key' => 'completed', 'label' => 'Selesai', 'icon' => '✅'];
@@ -66,8 +66,16 @@ class OrderTrackingController extends Controller
             return count($steps) - 1;
         }
 
+        // delivering = driver sedang mengantar
+        if ($order->status === 'delivering') {
+            $idx = array_search('delivering', array_column($steps, 'key'));
+            return $idx !== false ? $idx : count($steps) - 2;
+        }
+
+        // delivered = driver sudah sampai, menunggu verifikasi admin → tampilkan juga di step delivering
         if ($order->status === 'delivered') {
-            return array_search('delivered', array_column($steps, 'key')) ?: count($steps) - 2;
+            $idx = array_search('delivering', array_column($steps, 'key'));
+            return $idx !== false ? $idx : count($steps) - 2;
         }
 
         if ($order->status === 'processed') {

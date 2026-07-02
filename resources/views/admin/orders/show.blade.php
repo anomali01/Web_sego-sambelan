@@ -237,4 +237,12 @@
 </div>
 
 <a href="/admin/orders" class="btn btn-outline">← Kembali ke Daftar</a>
+
+@if(!in_array($order->status, ['completed', 'canceled']))
+@push('scripts')
+<script>
+    SmartRefresh.init({ pollUrl: '/admin/poll', interval: 10 });
+</script>
+@endpush
+@endif
 @endsection

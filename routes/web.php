@@ -16,13 +16,23 @@ use App\Http\Controllers\Admin\PaymentSettingController;
 use Illuminate\Support\Facades\Route;
 
 // ─── Public / Guest ─────────────────────────────────────
-Route::get('/', fn() => redirect('/menu'));
+Route::get('/', function () {
+    if (auth()->check()) {
+        if (auth()->user()->isSeller()) {
+            return redirect('/admin/dashboard');
+        }
+        if (auth()->user()->isDriver()) {
+            return redirect()->route('driver.orders.index');
+        }
+    }
+    return redirect('/menu');
+});
 
-// Catalog publik (bisa diakses tanpa login)
-Route::get('/menu', [MenuController::class, 'index'])->name('menu');
+// Catalog publik (bisa diakses tanpa login, tapi admin/driver di-redirect)
+Route::get('/menu', [MenuController::class, 'index'])->name('menu')->middleware('role.buyer');
 
-// Tambah ke keranjang (guest akan di-redirect ke login)
-Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
+// Tambah ke keranjang (guest akan di-redirect ke login, admin/driver diblokir)
+Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add')->middleware('role.buyer');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -46,8 +56,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/profile/complete', [ProfileController::class, 'updateProfile']);
 });
 
-// ─── Buyer: Protected Routes (auth + profile complete) ──
-Route::middleware(['auth', 'profile.complete'])->group(function () {
+// ─── Buyer: Protected Routes (auth + profile complete + buyer only) ──
+Route::middleware(['auth', 'role.buyer', 'profile.complete'])->group(function () {
     // Shopping Cart
     Route::get('/cart', [CartController::class, 'index'])->name('cart');
     Route::patch('/cart/update', [CartController::class, 'update'])->name('cart.update');
@@ -91,6 +101,9 @@ Route::middleware(['auth', 'role.seller'])->prefix('admin')->name('admin.')->gro
 
     Route::get('/payment-settings', [PaymentSettingController::class, 'edit'])->name('payment-settings.edit');
     Route::put('/payment-settings', [PaymentSettingController::class, 'update'])->name('payment-settings.update');
+
+    // Polling endpoint for smart auto-refresh
+    Route::get('/poll', [DashboardController::class, 'poll'])->name('poll');
 });
 
 // ─── Driver Dashboard ───────────────────────────────────
@@ -98,4 +111,7 @@ Route::middleware(['auth', 'role.driver'])->prefix('driver')->name('driver.')->g
     Route::get('/orders', [\App\Http\Controllers\Driver\OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [\App\Http\Controllers\Driver\OrderController::class, 'show'])->name('orders.show');
     Route::patch('/orders/{order}/status', [\App\Http\Controllers\Driver\OrderController::class, 'updateStatus'])->name('orders.status');
+
+    // Polling endpoint for smart auto-refresh
+    Route::get('/poll', [\App\Http\Controllers\Driver\OrderController::class, 'poll'])->name('poll');
 });

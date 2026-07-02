@@ -36,7 +36,7 @@
                 <label class="order-type-card" id="delivery-card">
                     <input type="radio" name="order_type" value="delivery" {{ old('order_type', 'delivery') === 'delivery' ? 'checked' : '' }} onchange="toggleOrderType()">
                     <div class="order-type-content">
-                        <span class="order-type-icon">🚚</span>
+                        <img src="{{ asset('images/icons/icon_delivery.svg') }}" alt="Delivery" style="height: 38px; width: 38px; object-fit: contain; margin-bottom: 0.5rem; filter: drop-shadow(0 2px 4px rgba(234, 88, 12, 0.15));">
                         <h3>Delivery</h3>
                         <p>Kirim ke alamat Anda</p>
                     </div>
@@ -44,7 +44,7 @@
                 <label class="order-type-card" id="dinein-card">
                     <input type="radio" name="order_type" value="dine_in" {{ old('order_type') === 'dine_in' ? 'checked' : '' }} onchange="toggleOrderType()">
                     <div class="order-type-content">
-                        <span class="order-type-icon">🍽️</span>
+                        <img src="{{ asset('images/icons/icon_dinein.svg') }}" alt="Dine-In" style="height: 38px; width: 38px; object-fit: contain; margin-bottom: 0.5rem; filter: drop-shadow(0 2px 4px rgba(217, 119, 6, 0.15));">
                         <h3>Dine-In</h3>
                         <p>Makan di tempat</p>
                     </div>
@@ -127,8 +127,8 @@
                 <label class="order-type-card" style="padding: 1rem; border-radius: var(--radius-sm);">
                     <input type="radio" name="payment_channel" value="midtrans" {{ old('payment_channel', 'midtrans') === 'midtrans' ? 'checked' : '' }} onchange="updatePayButton()">
                     <div class="order-type-content" style="display: flex; align-items: center; justify-content: space-between;">
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <span class="order-type-icon" style="font-size: 1.5rem; margin: 0;">💳</span>
+                        <div style="display: flex; align-items: center; gap: 0.8rem;">
+                            <img src="{{ asset('images/icons/icon_card.svg') }}" alt="Otomatis" style="height: 26px; width: 26px; object-fit: contain;">
                             <h3 style="margin: 0; font-size: 1rem;">Otomatis (QRIS, VA, E-Wallet)</h3>
                         </div>
                     </div>
@@ -137,8 +137,8 @@
                 <label class="order-type-card" style="padding: 1rem; border-radius: var(--radius-sm);">
                     <input type="radio" name="payment_channel" value="manual" {{ old('payment_channel') === 'manual' ? 'checked' : '' }} onchange="updatePayButton()">
                     <div class="order-type-content" style="display: flex; align-items: center; justify-content: space-between;">
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <span class="order-type-icon" style="font-size: 1.5rem; margin: 0;">🏦</span>
+                        <div style="display: flex; align-items: center; gap: 0.8rem;">
+                            <img src="{{ asset('images/icons/icon_bank.svg') }}" alt="Transfer Manual" style="height: 26px; width: 26px; object-fit: contain;">
                             <h3 style="margin: 0; font-size: 1rem;">Transfer Manual</h3>
                         </div>
                     </div>

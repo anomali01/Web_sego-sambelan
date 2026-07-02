@@ -30,4 +30,10 @@
     </div>
     @endif
 </div>
+
+@push('scripts')
+<script>
+    SmartRefresh.init({ pollUrl: '/driver/poll', interval: 10 });
+</script>
+@endpush
 @endsection
