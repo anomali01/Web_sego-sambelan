@@ -24,6 +24,7 @@ if [ ! -f /app/.env ]; then
     cat << 'EOF' > /app/.env
 APP_NAME="Sego Sambelan"
 APP_ENV=production
+APP_KEY=
 APP_DEBUG=true
 APP_URL=http://localhost
 
@@ -41,10 +42,15 @@ FILESYSTEM_DISK=public
 EOF
 fi
 
-# Generate key if not set
-if [ -z "$APP_KEY" ] && ! grep -q "APP_KEY=base64:" /app/.env 2>/dev/null; then
-    echo "⚠️  APP_KEY not set, generating..."
-    php artisan key:generate --force
+# Ensure APP_KEY is generated and exported
+ENV_KEY=$(grep -E '^APP_KEY=base64:' /app/.env | cut -d '=' -f2- || true)
+if [ -z "$ENV_KEY" ]; then
+    echo "🔑 Generating fresh APP_KEY..."
+    KEY=$(php -r "echo 'base64:'.base64_encode(random_bytes(32));")
+    sed -i "s|^APP_KEY=.*|APP_KEY=$KEY|" /app/.env
+    export APP_KEY="$KEY"
+else
+    export APP_KEY="$ENV_KEY"
 fi
 
 # Clear & rebuild caches for production
