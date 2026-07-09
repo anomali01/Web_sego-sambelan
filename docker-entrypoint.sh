@@ -18,8 +18,31 @@ mkdir -p /app/storage/logs
 # Set permissions
 chmod -R 775 /app/storage /app/bootstrap/cache /app/database
 
+# Create production .env if it does not exist
+if [ ! -f /app/.env ]; then
+    echo "📝 Creating /app/.env with production defaults for SQLite..."
+    cat << 'EOF' > /app/.env
+APP_NAME="Sego Sambelan"
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=http://localhost
+
+LOG_CHANNEL=stderr
+LOG_LEVEL=info
+
+DB_CONNECTION=sqlite
+DB_DATABASE=/app/database/database.sqlite
+
+SESSION_DRIVER=file
+SESSION_LIFETIME=120
+
+CACHE_STORE=file
+FILESYSTEM_DISK=public
+EOF
+fi
+
 # Generate key if not set
-if [ -z "$APP_KEY" ]; then
+if [ -z "$APP_KEY" ] && ! grep -q "APP_KEY=base64:" /app/.env 2>/dev/null; then
     echo "⚠️  APP_KEY not set, generating..."
     php artisan key:generate --force
 fi
