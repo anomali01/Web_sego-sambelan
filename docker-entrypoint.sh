@@ -15,20 +15,20 @@ mkdir -p /app/storage/framework/cache
 mkdir -p /app/storage/app/public
 mkdir -p /app/storage/logs
 
-# Set permissions
-chmod -R 775 /app/storage /app/bootstrap/cache /app/database
+# Set open permissions for storage & sqlite database
+chmod -R 777 /app/storage /app/bootstrap/cache /app/database
 
 # Create production .env if it does not exist
 if [ ! -f /app/.env ]; then
-    echo "📝 Creating /app/.env with production defaults for SQLite..."
+    echo "📝 Creating /app/.env with defaults for SQLite..."
     cat << 'EOF' > /app/.env
 APP_NAME="Sego Sambelan"
 APP_ENV=production
-APP_DEBUG=false
+APP_DEBUG=true
 APP_URL=http://localhost
 
 LOG_CHANNEL=stderr
-LOG_LEVEL=info
+LOG_LEVEL=debug
 
 DB_CONNECTION=sqlite
 DB_DATABASE=/app/database/database.sqlite
