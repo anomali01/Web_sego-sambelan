@@ -62,6 +62,10 @@ class LoginController extends Controller
             return redirect('/admin/dashboard');
         }
 
+        if ($user->isDriver()) {
+            return redirect()->route('driver.orders.index');
+        }
+
         return redirect('/menu');
     }
 }

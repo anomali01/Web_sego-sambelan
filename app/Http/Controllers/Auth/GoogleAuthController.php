@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
@@ -102,7 +101,7 @@ class GoogleAuthController extends Controller
                 $user = User::create([
                     'name' => $name,
                     'email' => $email,
-                    'password' => Hash::make(Str::random(24)), // Random secure password since they use Google
+                    'password' => Str::random(24), // Random secure password since they use Google
                     'role' => 'buyer', // Default role for Google login
                     'email_verified_at' => now(), // Mark email as verified since it came from Google
                 ]);

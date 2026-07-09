@@ -1,0 +1,15 @@
+.git
+.gitignore
+.env
+.env.backup
+.env.production
+node_modules
+vendor
+storage/*.key
+database/database.sqlite
+.phpunit.result.cache
+.idea
+.vscode
+.fleet
+*.md
+start-server.bat

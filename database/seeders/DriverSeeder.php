@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
 
 class DriverSeeder extends Seeder
 {
@@ -33,7 +32,7 @@ class DriverSeeder extends Seeder
                 ['email' => $driver['email']],
                 [
                     'name' => $driver['name'],
-                    'password' => Hash::make('password'),
+                    'password' => 'password',
                     'role' => 'driver',
                     'email_verified_at' => now(),
                 ]
